@@ -14,6 +14,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'According to tradition, the Virgin Mary — still living in Jerusalem — appeared to the Apostle James the Greater in 40 AD while he was evangelizing near the Ebro River in what is now Zaragoza, Spain, and asked him to build a chapel in her honor, placing a jasper pillar at the site as the foundation. This event is venerated as the first Marian apparition in history and unique in occurring before the death of the Virgin. The Chapel and later the great Basilica of Our Lady of the Pillar were built on the spot; Pope Innocent XIII formally recognized the tradition in 1723, and the jasper pillar enclosed within the basilica remains the focal point of pilgrimage for millions of visitors each year.',
+    feastDay: '10-12',
   },
   {
     id: 'our-lady-of-cotignac',
@@ -28,6 +29,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'On June 10, 1519, the Virgin Mary appeared accompanied by Saint Michael the Archangel and Saint Bernard to a shepherd named Jean de la Baume on a rocky hillside near Cotignac in Provence, asking that a chapel be built in her honor and promising special graces to those who came in prayer. A church and shrine were established on the site with ecclesiastical approval, and the sanctuary grew into an important Provençal pilgrimage destination. In a separate but related event in 1660, Saint Joseph also appeared at the same location to a shepherd named Gaspard Ricard and miraculously produced a spring of water during a severe drought, making Cotignac one of the only sites in the Catholic world associated with both a Marian apparition and an apparition of Saint Joseph.',
+    feastDay: '06-10',
   },
   {
     id: 'our-lady-of-siluva',
@@ -42,6 +44,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'In 1608, in the village of Šiluva in Lithuania — where Calvinism had suppressed Catholic practice for nearly fifty years — a group of children and a schoolteacher reported seeing a beautiful woman weeping while holding an infant child on a large rock in an open field; when a Calvinist minister challenged her identity, she declared herself the Virgin Mary and lamented that the land where she had once been honored had been given over to the plowing of fields. The apparition led to the rediscovery of a buried stone chest containing a painting of the Blessed Virgin and legal documents proving the site had once belonged to a Catholic church. Pope Pius VI formally recognized the apparitions in a papal decree of 1775, and Šiluva became the first Marian apparition site in the world to receive a canonical coronation, in 1786, marking it as one of the most formally authenticated apparitions in Church history.',
+    feastDay: '09-08',
   },
   {
     id: 'our-lady-of-laus',
@@ -56,6 +59,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'Between 1664 and 1718, a young shepherdess named Benoîte Rencurel reported approximately fifty-four apparitions of the Virgin Mary in the remote valley of Laus in the Hautes-Alpes region of France, receiving messages calling for prayer, penance, and conversion of sinners; the site became notable for the persistent fragrance of roses reported by pilgrims and for numerous healings. Early diocesan approval was granted by the Diocese of Embrun in September 1665, and a church was built on the site between 1666 and 1669. After a comprehensive modern investigation, Bishop Jean-Michel de Falco Leandri of the Diocese of Gap issued a formal declaration of authenticity on May 5, 2008 — with the approval of the Holy See — making Laus the first Marian apparition formally approved by the Vatican in the twenty-first century and placing it on equal canonical footing with Lourdes and Fatima.',
+    feastDay: '05-04',
   },
   {
     id: 'our-lady-of-guadalupe',
@@ -70,6 +74,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'In December 1531, the indigenous peasant Juan Diego reported four encounters with a woman who identified herself as the Virgin Mary on Tepeyac Hill near Mexico City, asking that a chapel be built in her honor. As a sign for the local bishop, she filled Juan Diego\'s tilma — a coarse cloak — with roses and left upon it a detailed image of herself that survives to this day in the Basilica of Our Lady of Guadalupe. The tilma and the spring of conversion it sparked among millions of indigenous people in New Spain remain among the most studied religious artifacts in the world.',
+    feastDay: '12-12',
   },
   {
     id: 'our-lady-of-the-miraculous-medal',
@@ -84,6 +89,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'In 1830, a young novice named Catherine Labouré received a series of apparitions in the chapel of the Daughters of Charity on Rue du Bac in Paris, during which a woman she identified as the Virgin Mary showed her the design for a medal bearing specific images and inscriptions. Mary asked that the medal be struck and worn, promising special graces to those who wore it with faith. The medal was approved by the Archbishop of Paris in 1832 and quickly spread throughout the Catholic world, becoming known as the Miraculous Medal after numerous healings were reported by those who wore it.',
+    feastDay: '11-27',
   },
   {
     id: 'our-lady-of-la-salette',
@@ -98,6 +104,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'On September 19, 1846, two young shepherd children — Mélanie Calvat and Maximin Giraud — reported encountering a weeping woman seated on a stone in the French Alps near La Salette, who delivered a message calling for prayer, penance, and an end to blasphemy and Sabbath-breaking. The woman spoke first in French, then in the children\'s respective local dialects, before rising and disappearing above the hillside. Bishop Philibert de Bruillard of Grenoble formally approved the apparition in 1851 after a five-year investigation, and a basilica was subsequently built on the site.',
+    feastDay: '09-19',
   },
   {
     id: 'our-lady-of-lourdes',
@@ -112,6 +119,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'Between February and July 1858, a fourteen-year-old girl named Bernadette Soubirous reported eighteen apparitions of a young woman in the Massabielle grotto on the edge of Lourdes, France; during one apparition, the woman identified herself with the words "I am the Immaculate Conception." At the woman\'s direction, Bernadette uncovered a spring in the grotto floor, and the water from that spring has since been associated with thousands of reported healings that drew pilgrims from across the world. Bishop Laurence of Tarbes approved the apparitions in 1862, and Lourdes has since become one of the most visited pilgrimage destinations on earth.',
+    feastDay: '02-11',
   },
   {
     id: 'our-lady-of-good-help',
@@ -126,6 +134,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'In 1859, a Belgian immigrant named Adèle Brise reported three encounters near Champion, Wisconsin, with a woman who identified herself as the Queen of Heaven and instructed Adèle to gather children to teach them the faith and how to make a good confession. Adèle devoted the rest of her life to this mission, establishing a school for children and later sheltering dozens of families within the site during the catastrophic Peshtigo Fire of 1871 — after which the surrounding land was reportedly found undamaged. In 2010, Bishop David Ricken of the Diocese of Green Bay granted a formal declaration of worthiness of belief, making it the first and only Vatican-recognized apparition on United States soil.',
+    feastDay: '10-09',
   },
   {
     id: 'our-lady-of-pontmain',
@@ -140,6 +149,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'On the evening of January 17, 1871 — as Prussian forces advanced toward the village of Pontmain during the Franco-Prussian War — four children reported seeing a tall, silent woman in a starry blue gown above the rooftop of a house, whose image was not visible to the adults present. A text gradually appeared beneath her figure: "But pray, my children. God will answer your prayers in a short time. My Son allows himself to be moved by compassion." That same night, the Prussian army halted its advance without explanation, and an armistice ending the war was signed two weeks later.',
+    feastDay: '01-17',
   },
   {
     id: 'our-lady-of-pellevoisin',
@@ -154,6 +164,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'Between February and December 1876, a domestic servant named Estelle Faguette, who was gravely ill with tuberculosis and peritonitis, reported fifteen apparitions of the Virgin Mary at Pellevoisin in central France, after which her health was dramatically restored. During the apparitions, Mary revealed the design of the Scapular of the Sacred Heart — a small cloth devotional item — and asked that it be spread among the faithful. The Diocese of Bourges recognized the apparitions as worthy of belief, and Pellevoisin became an active pilgrimage site, particularly associated with the Scapular devotion that spread through France and beyond.',
+    feastDay: '02-15',
   },
   {
     id: 'our-lady-of-knock',
@@ -168,6 +179,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'On the rainy evening of August 21, 1879, fifteen villagers of varying ages reported seeing three luminous figures — identified as the Virgin Mary, Saint Joseph, and Saint John the Evangelist — motionless against the south gable wall of the parish church in Knock, County Mayo; an altar, a cross, and a lamb surrounded by adoring angels were also described. The vision lasted approximately two hours, and those present reported that the ground beneath the figures remained dry despite the rain. A Church commission examined fifteen witnesses the following year and found their testimony consistently credible; Knock has since grown into one of Ireland\'s major national shrines, visited by Pope John Paul II in 1979.',
+    feastDay: '08-21',
   },
   {
     id: 'our-lady-of-fatima',
@@ -182,6 +194,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'From May through October 1917, three shepherd children — Lucia dos Santos and her cousins Francisco and Jacinta Marto — reported six apparitions of a woman near the Cova da Iria in Fátima, Portugal, who asked for prayer, penance, and the recitation of the Rosary and entrusted them with three prophetic secrets. On October 13, 1917, an estimated 70,000 people gathered in response to the children\'s announcement of a promised sign, and thousands reported witnessing an extraordinary solar phenomenon in which the sun appeared to spin, change colors, and plunge toward the earth. The Bishop of Leiria approved the apparitions in 1930, and Fátima is now one of the most visited Catholic pilgrimage sites in the world.',
+    feastDay: '05-13',
   },
   {
     id: 'our-lady-of-beauraing',
@@ -196,6 +209,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'Between November 1932 and January 1933, five children from two families — ranging in age from nine to fifteen — reported thirty-three apparitions of a woman in the garden of a convent school in Beauraing, Belgium, who identified herself as the Immaculate Virgin and the Mother of God and revealed a golden heart on her chest. The apparitions drew enormous crowds to the site and triggered extensive Church investigation; Bishop André-Marie Charue of Namur issued a formal declaration of approval in 1949, affirming that the Virgin Mary had indeed appeared. Beauraing remains one of Belgium\'s most significant Marian shrines.',
+    feastDay: '11-29',
   },
   {
     id: 'our-lady-of-banneux',
@@ -210,6 +224,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'Between January and March 1933, an eleven-year-old girl named Mariette Beco reported eight apparitions of a woman in her family\'s garden in the village of Banneux in eastern Belgium, who led her to a small spring in the nearby woods and identified herself as "the Virgin of the Poor." Mary asked that the spring serve the sick of all nations, and the site has since drawn pilgrims seeking physical and spiritual healing from around the world. Bishop Louis-Joseph Kerkhofs of Liège approved the apparitions in 1949, describing Banneux as a place of grace for the poor and suffering.',
+    feastDay: '01-15',
   },
   {
     id: 'our-lady-of-zeitoun',
@@ -224,6 +239,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'Beginning on April 2, 1968, and continuing intermittently for several years, large crowds — including Muslims, Christians, and non-believers — reported witnessing luminous apparitions of a glowing, silent female figure above the domes of the Coptic Orthodox Church of the Virgin Mary in the Zeitoun district of Cairo. The phenomena, which included what witnesses described as doves of light and clouds of fragrant incense, were photographed by journalists and investigated by Egyptian government authorities. Pope Cyril VI of Alexandria and the Coptic Orthodox Church formally recognized the apparitions, and the events are notable for the extraordinary scale and diversity of those who reported witnessing them — estimated in the millions over the full period.',
+    feastDay: '04-02',
   },
   {
     id: 'our-lady-of-akita',
@@ -238,6 +254,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'From 1973 to 1981, Sister Agnes Sasagawa of the Institute of the Handmaids of the Eucharist in Akita, Japan, reported receiving messages through a locution and a wooden statue of the Virgin Mary that had been carved by a local artist; the statue was witnessed by the community and by visitors to weep visible tears on 101 separate occasions, and analyses by Japanese scientists confirmed the tears were composed of human secretions. The messages entrusted to Sister Agnes called for prayer, penance, and reparation, and carried a tone of urgent maternal concern for the state of the world and the Church. Bishop John Shojiro Ito of Niigata issued a formal declaration in 1984 approving the events as supernatural in character, a decision subsequently supported by Cardinal Joseph Ratzinger.',
+    feastDay: '10-13',
   },
   {
     id: 'our-lady-of-kibeho',
@@ -252,6 +269,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'Beginning in November 1981 at the Kibeho secondary school in southern Rwanda, seven young students reported apparitions of the Virgin Mary that included visions of devastating suffering — rivers of blood, headless bodies, and a world engulfed in fire — that many later interpreted as a forewarning of the 1994 Rwandan genocide. Mary asked those who appeared to her to pray the Rosary of the Seven Sorrows as an act of repentance and intercession, and she identified herself as the Mother of the Word. In 2001, Bishop Augustin Misago of Gikongoro issued a declaration of approval for three of the visionaries, making Kibeho the first and only Vatican-recognized Marian apparition site on the African continent.',
+    feastDay: '11-28',
   },
   {
     id: 'our-lady-of-the-tears',
@@ -266,6 +284,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'Between August 29 and September 1, 1953, a small plaster bas-relief image of the Immaculate Heart of Mary in the home of Angelo and Antonina Iannuso in Siracusa, Sicily, was witnessed by hundreds of people to shed genuine tears on multiple occasions; laboratory analysis by Italian scientists determined the liquid was of human origin, with the composition of tears. The phenomena attracted enormous public attention, drawing crowds of thousands to the modest apartment, and the Sicilian bishops convened an investigation that led to a formal declaration of authenticity in December 1953. Pope Pius XII personally acknowledged the miracle in a radio address, and the National Shrine of Our Lady of Tears — a striking cone-shaped basilica — was subsequently built on the site to house the image, which remains a major pilgrimage destination in southern Italy.',
+    feastDay: '08-29',
   },
   {
     id: 'our-lady-of-betania',
@@ -280,6 +299,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'From 1976 onward, a Venezuelan wife and mother named María Esperanza Medrano de Bianchini reported apparitions of the Virgin Mary at a remote farm property called Betania outside the village of Cúa in Miranda State, where Mary identified herself as "Mary, Reconciler of Peoples and Nations" and called for unity, prayer, and conversion. The site became known also for other extraordinary phenomena reported by large groups of pilgrims, including a Eucharistic miracle in 1991 witnessed by over a hundred people. Bishop Pío Bello Ricardo of the Diocese of Los Teques issued a formal declaration of authenticity on November 21, 1987 — after consulting with Cardinal Joseph Ratzinger — affirming that the apparitions were of supernatural origin and worthy of the assent of the faithful.',
+    feastDay: '11-21',
   },
   {
     id: 'our-lady-rosa-mystica',
@@ -294,6 +314,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'Beginning on July 13, 1947, in the hospital chapel of Montichiari in the Province of Brescia, a nurse-postulant named Pierina Gilli reported three apparitions of the Virgin Mary who presented herself as the "Rosa Mystica" — dressed in white with three swords in her heart representing priests who had lost their faith, priestly vocation, or priestly purity — and asked for a special hour of grace for the healing of souls on the thirteenth of each month. In a subsequent apparition at the spring of Fontanelle in 1966, Mary blessed the waters there for spiritual and physical healing. After decades of investigation, Bishop Pierantonio Tremolada of Brescia issued a declaration approving devotion in 2019, and on July 5, 2024, the Vatican\'s Dicastery for the Doctrine of the Faith issued a formal Nihil Obstat with the approval of Pope Francis, granting full ecclesiastical endorsement to the Rosa Mystica devotion and apparitions.',
+    feastDay: '07-13',
   },
   {
     id: 'our-lady-of-cuapa',
@@ -308,6 +329,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'Between April and October 1980, a sacristan and civil servant named Bernardo Martínez reported six apparitions of the Virgin Mary near the small town of Cuapa in the Chontales department of Nicaragua, where Mary urged the faithful to pray the Rosary daily, to live the Gospel, to seek peace, and to refrain from accepting any ideology that went against the Church — a pointed message delivered during the early years of the Sandinista revolution. In the final apparition on October 13, 1980, she announced she would not return and entrusted her message to the care of the local Church. Bishop Pablo Antonio Vega Mantilla of the Diocese of Juigalpa conducted a thorough investigation and issued a formal declaration of supernatural authenticity on November 13, 1982, making it the only Vatican-recognized Marian apparition in Central America.',
+    feastDay: '04-15',
   },
   {
     id: 'our-lady-of-medjugorje',
@@ -322,6 +344,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'Beginning on June 24, 1981, six young people in the village of Medjugorje in what was then Yugoslavia (now Bosnia-Herzegovina) began reporting daily apparitions of the Virgin Mary, who identified herself as the "Queen of Peace" and delivered messages calling for prayer, fasting, conversion, and reconciliation; the apparitions are reported as ongoing to the present day, with millions of pilgrims visiting the site over more than four decades. Numerous diocesan and Vatican commissions studied the phenomena over the years, with opinions divided on the supernatural character of the ongoing events. In September 2024, the Vatican\'s Dicastery for the Doctrine of the Faith — with the approval of Pope Francis — issued a formal Nihil Obstat for the spiritual experience associated with the apparitions, permitting and encouraging public devotion at the site and stating that the spiritual fruits there are "genuinely positive" while noting the ongoing apparitions remain under continued discernment.',
+    feastDay: '06-25',
   },
   {
     id: 'our-lady-of-all-nations',
@@ -336,6 +359,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'From 1945 to 1959, Ida Peerdeman, a devout laywoman in Amsterdam, reported fifty-six visions attributed to the Virgin Mary, who asked to be known as "The Lady of All Nations" and presented a specific prayer and image; the messages called for a new Marian dogma describing Mary as Co-Redemptrix, Mediatrix, and Advocate. After decades of study, Bishop Jozef Punt of the Diocese of Haarlem-Amsterdam in 2002 lifted a previous restriction and approved the use of the prayer and devotion to Our Lady of All Nations, with the concurrence of the Vatican\'s Congregation for the Doctrine of the Faith under Cardinal Ratzinger — making the devotion officially permitted within the Church. The formal approval extends to the devotion and the prayer rather than a declaration of the supernatural origin of the apparitions themselves, and a chapel in Amsterdam dedicated to Our Lady of All Nations has since become an active international pilgrimage site.',
+    feastDay: '05-31',
   },
   {
     id: 'our-lady-of-garabandal',
@@ -350,6 +374,7 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'From June 1961 to June 1965, four young girls — Conchita González, Mari Loli Mazón, Jacinta González, and María Cruz González — in the remote mountain village of San Sebastián de Garabandal in Cantabria, northern Spain, reported approximately 2,000 apparitions of Saint Michael the Archangel and later the Virgin Mary, who presented herself as "Our Lady of Mount Carmel" and conveyed messages emphasizing penance, frequent Communion, and warnings of a coming chastisement, along with promises of a future "Great Warning" and "Great Miracle." The girls experienced dramatic physical ecstasies witnessed by thousands of visitors, and the apparitions attracted intense international attention and devoted followings that persist to this day. The Diocese of Santander conducted multiple formal investigations — in 1961, 1962, 1965, and most recently in 1991 — and has consistently maintained that there is no basis for affirming supernatural origin, a position reaffirmed by successive bishops of Santander, leaving Garabandal among the most discussed yet formally unapproved apparition sites in modern Catholic history.',
+    feastDay: '06-18',
   },
   {
     id: 'our-lady-of-san-nicolas',
@@ -364,5 +389,6 @@ export const apparitions: Apparition[] = [
     imageUrl: '',
     summary:
       'From October 1983 to February 1990, an Argentine housewife named Gladys Quiroga de Motta reported receiving nearly 1,800 messages from the Virgin Mary and from Christ in the city of San Nicolás de los Arroyos in Buenos Aires Province; Mary identified herself as Our Lady of the Rosary and asked that a church be built in her honor, offering messages of love, conversion, and intercession for Argentina and the world. A miraculous image central to the apparitions was also associated with reported healings at the site. After a rigorous investigation, Bishop Héctor Sabatino Cardelli of the Diocese of San Nicolás issued a formal declaration on May 22, 2016, affirming the supernatural character of the apparitions and declaring them worthy of belief — one of the most recent and formally documented Marian approvals in Latin America.',
+    feastDay: '09-25',
   },
 ]

@@ -1,29 +1,38 @@
 import { useState, useMemo } from 'react'
 import type { Apparition } from '../data/types'
+import { getCentury } from '../data/types'
 
 interface SearchSidebarProps {
   apparitions: Apparition[]
   selectedId: string | null
   onSelect: (a: Apparition) => void
+  century: number | null
+  country: string | null
+  timelineYear: number
+  todayIds?: Set<string>
 }
 
-export function SearchSidebar({ apparitions, selectedId, onSelect }: SearchSidebarProps) {
+export function SearchSidebar({ apparitions, selectedId, onSelect, century, country, timelineYear, todayIds }: SearchSidebarProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [query, setQuery] = useState('')
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    const list = q
-      ? apparitions.filter(
-          (a) =>
-            a.name.toLowerCase().includes(q) ||
-            a.location.toLowerCase().includes(q) ||
-            a.country.toLowerCase().includes(q) ||
-            String(a.year).includes(q),
-        )
-      : [...apparitions]
-    return list.sort((a, b) => a.year - b.year)
-  }, [apparitions, query])
+    return apparitions
+      .filter((a) => {
+        if (a.year > timelineYear) return false
+        if (century !== null && getCentury(a.year) !== century) return false
+        if (country !== null && a.country !== country) return false
+        if (q && !(
+          a.name.toLowerCase().includes(q) ||
+          a.location.toLowerCase().includes(q) ||
+          a.country.toLowerCase().includes(q) ||
+          String(a.year).includes(q)
+        )) return false
+        return true
+      })
+      .sort((a, b) => a.year - b.year)
+  }, [apparitions, query, century, country, timelineYear])
 
   const handleSelect = (a: Apparition) => {
     onSelect(a)
@@ -45,7 +54,7 @@ export function SearchSidebar({ apparitions, selectedId, onSelect }: SearchSideb
             Apparitions
           </span>
           <span className="text-celestial-star-dim text-xs">
-            {query.trim()
+            {filtered.length < apparitions.length
               ? `${filtered.length} / ${apparitions.length}`
               : String(apparitions.length)}
           </span>
@@ -108,8 +117,13 @@ export function SearchSidebar({ apparitions, selectedId, onSelect }: SearchSideb
                     >
                       {a.name}
                     </div>
-                    <div className="font-body text-xs text-celestial-star-dim mt-0.5">
-                      {a.country} · {a.year}
+                    <div className="font-body text-xs text-celestial-star-dim mt-0.5 flex items-center gap-2">
+                      <span>{a.country} · {a.year}</span>
+                      {todayIds?.has(a.id) && (
+                        <span className="text-celestial-gold text-[10px] font-semibold tracking-wider uppercase">
+                          Feast Day
+                        </span>
+                      )}
                     </div>
                   </li>
                 )

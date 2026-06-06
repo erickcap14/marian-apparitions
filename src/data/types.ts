@@ -12,6 +12,7 @@ export const ApparitionSchema = z.object({
   sourceUrl: z.string().url(),
   imageUrl: z.string(),
   summary: z.string(),
+  feastDay: z.string().optional(), // MM-DD, e.g. "02-11" = Feb 11
 })
 
 export type Apparition = z.infer<typeof ApparitionSchema>
