@@ -15,11 +15,11 @@
 |------|------------------------------------------------------------------|--------|---------------------------------|------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | T001 | Initialize beads tracking                                         | [x]    | —                               | —          | Done per changelog/`bd init` commit. Reference only — feature work tracked in beads + this file.                                                                     |
 | T002 | Decide & record tech stack in infra.md + sbom.md                 | [x]    | T003,T004,T005,T010             | —          | Vite + React + TypeScript, MapLibre GL JS, Tailwind, @anthropic-ai/sdk. infra.md, sbom.md, security.md filled. |
-| T003 | Scaffold project skeleton + install/startup scripts              | [ ]    | T006,T010,T019                  | T002       | Fill infra.md run commands (install/startup/local address). Local-only app (no public host per prd §4).                                                              |
-| T004 | Populate sbom.md with pinned approved dependencies               | [ ]    | T010                            | T002       | Pri-1 supply-chain gate. Only listed/pinned deps allowed. Map lib + Anthropic SDK must be pinned here before use.                                                    |
-| T005 | Fill security.md (data sensitivity, secrets, .gitignore audit)   | [ ]    | T010,T013                       | T002       | Pri-1. Classify data (Public/local). Enforce: never hardcode secrets; `.env`/`*.pem` in .gitignore; ANTHROPIC_API_KEY via env only (prd §4).                         |
-| T006 | Define dataset schema + TypeScript/data types                    | [ ]    | T007,T008,T011                  | T003       | Shape: name, location, country, lat, lng, year, status, sourceUrl, imageUrl, summary (prd §4).                                                                       |
-| T007 | Set up base styling/theme (celestial dark + gold/Marian-blue)    | [ ]    | T009,T012,T015,T022             | T003       | Deep indigo/navy bg, luminous gold, starlight white, Marian-blue secondary; starfield ambiance (prd §3).                                                             |
+| T003 | Scaffold project skeleton + install/startup scripts              | [x]    | T006,T010,T019                  | T002       | Vite 5 + React 18 + TS. All deps installed. Dev server at http://localhost:5173. marian-apparitions-3vg |
+| T004 | Populate sbom.md with pinned approved dependencies               | [x]    | T010                            | T002       | Exact versions pinned. esbuild moderate vuln documented (local-only, accepted). marian-apparitions-8vk |
+| T005 | Fill security.md (data sensitivity, secrets, .gitignore audit)   | [x]    | T010,T013                       | T002       | .gitignore updated, .env.example created, security.md complete. marian-apparitions-7sf |
+| T006 | Define dataset schema + TypeScript/data types                    | [x]    | T007,T008,T011                  | T003       | Zod ApparitionSchema, Apparition type, ApparitionFilter, getCentury(). marian-apparitions-m6q |
+| T007 | Set up base styling/theme (celestial dark + gold/Marian-blue)    | [x]    | T009,T012,T015,T022             | T003       | Cinzel/Inter fonts, celestial Tailwind palette, StarField canvas component, animations. marian-apparitions-zgv |
 
 ---
 
@@ -28,8 +28,8 @@
 
 | ID   | Task                                                              | Status | Blocks              | Blocked By | Notes                                                                                                                                       |
 |------|------------------------------------------------------------------|--------|---------------------|------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| T008 | Curate Nihil-Obstat apparition dataset (Story 10 `data_seed`)    | [ ]    | T009,T011,T013      | T006       | ONLY formally approved/Nihil Obstat events. Source-cite each via sourceUrl (Vatican/MiracleHunter). No live scraping at runtime (prd §4).    |
-| T011 | Geocode coordinates + validate lat/lng per shrine                | [ ]    | T009                | T006,T008  | Coordinates looked up per shrine; bundle with app. Validate data integrity (year, status, required fields).                                  |
+| T008 | Curate Nihil-Obstat apparition dataset (Story 10 `data_seed`)    | [x]    | T009,T011,T013      | T006       | 14 apparitions (1531–1981), miraclehunter.com sources, 3-sentence summaries. marian-apparitions-23x |
+| T011 | Geocode coordinates + validate lat/lng per shrine                | [x]    | T009                | T006,T008  | src/data/validate.ts — 14/14 pass Zod schema + coordinate range checks. marian-apparitions-4zu |
 
 ---
 
