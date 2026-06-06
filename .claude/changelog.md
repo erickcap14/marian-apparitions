@@ -46,6 +46,22 @@ This ensures transparency and traceability for all AI-executed workflows.
 
 ## [Unreleased]
 
+### Added (2026-06-05) — Session 3: Map + AI pipeline
+
+**T009 — Interactive MapLibre map with glowing gold pins**
+- `src/map/MapView.tsx`: MapLibre GL JS on CARTO Dark Matter base style (free, no API key)
+- GeoJSON source with all 14 apparition points; double-layer gold effect: blurred glow circle + crisp pin circle
+- Hover → dark-themed popup (name + year); click → `onSelect(Apparition)` callback
+- Navigation controls; attribution compact bottom-right
+- Bug fix: MapLibre's CSS sets `position: relative` on its container, breaking `absolute inset-0`; fixed with wrapper div pattern
+- `src/App.tsx` updated: `useState<Apparition | null>` for `selectedApparition`; map replaces placeholder
+
+**T013 — Pre-generated AI summary cache pipeline**
+- `scripts/generate-summaries.ts`: sequential Claude API calls (`claude-sonnet-4-6`) for all 14 apparitions
+- Scholarly 3-sentence system prompt; `max_tokens: 300`; writes updated `src/data/apparitions.ts` in place
+- Guards on missing `ANTHROPIC_API_KEY` (exit 1 with clear instructions)
+- `npm run generate-summaries` via `npx tsx`; no new runtime dependencies
+
 ### Added (2026-06-05) — Session 2: Foundation complete
 
 **T003 — Project scaffold** (`marian-apparitions-3vg`)

@@ -20,6 +20,10 @@ dist-ssr/
 # TypeScript build info
 *.tsbuildinfo
 
+# Agent worktrees and Playwright artifacts
+.claude/worktrees/
+.playwright-mcp/
+
 # Vite / editor
 *.local
 .DS_Store
