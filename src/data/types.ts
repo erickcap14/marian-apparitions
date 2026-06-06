@@ -8,7 +8,7 @@ export const ApparitionSchema = z.object({
   lat: z.number(),
   lng: z.number(),
   year: z.number().int(),
-  status: z.literal('approved'),
+  status: z.enum(['approved', 'approved_for_devotion', 'under_investigation', 'not_approved']),
   sourceUrl: z.string().url(),
   imageUrl: z.string(),
   summary: z.string(),

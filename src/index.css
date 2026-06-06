@@ -54,6 +54,21 @@
            bg-celestial-gold/20 text-celestial-gold border border-celestial-gold/40;
   }
 
+  .badge-devotion {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs font-body font-medium
+           bg-celestial-blue/20 text-celestial-blue border border-celestial-blue/40;
+  }
+
+  .badge-investigating {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs font-body font-medium
+           bg-amber-400/20 text-amber-300 border border-amber-400/40;
+  }
+
+  .badge-not-approved {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs font-body font-medium
+           bg-red-500/10 text-red-400 border border-red-500/30;
+  }
+
   .panel-celestial {
     @apply bg-celestial-indigo/95 backdrop-blur-sm border border-celestial-gold/20
            shadow-panel;

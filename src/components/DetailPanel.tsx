@@ -87,7 +87,18 @@ export function DetailPanel({ apparition, onClose }: DetailPanelProps) {
 
             {/* Badge */}
             <div className="mb-4">
-              <span className="badge-approved">&#10003; Nihil Obstat / Approved</span>
+              {apparition.status === 'approved' && (
+                <span className="badge-approved">&#10003; Nihil Obstat / Approved</span>
+              )}
+              {apparition.status === 'approved_for_devotion' && (
+                <span className="badge-devotion">&#9676; Approved for Devotion</span>
+              )}
+              {apparition.status === 'under_investigation' && (
+                <span className="badge-investigating">&#8943; Under Investigation</span>
+              )}
+              {apparition.status === 'not_approved' && (
+                <span className="badge-not-approved">&#10007; Not Approved</span>
+              )}
             </div>
 
             {/* Divider */}

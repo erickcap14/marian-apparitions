@@ -62,7 +62,7 @@ function App() {
             Marian Apparitions
           </h1>
           <p className="font-body text-celestial-star-dim text-xs tracking-wider mt-0.5">
-            Church-Approved Apparitions of Our Lady
+            Apparitions of Our Lady
           </p>
         </div>
 
@@ -79,7 +79,6 @@ function App() {
             mode={isSatellite ? 'satellite' : 'graphic'}
             onToggle={() => setIsSatellite((prev) => !prev)}
           />
-          <span className="badge-approved">Nihil Obstat Only</span>
         </div>
       </header>
 
