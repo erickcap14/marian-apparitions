@@ -39,7 +39,7 @@
 | ID   | Task                                                              | Status | Blocks                        | Blocked By              | Notes                                                                                                                                       |
 |------|------------------------------------------------------------------|--------|-------------------------------|-------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
 | T009 | Render interactive Mercator map with glowing pins (Story 1 `map_globe`) | [x] | T010,T012,T014,T016,T017 | T007,T008,T011 | src/map/MapView.tsx — MapLibre CARTO dark style, GeoJSON source, gold glow+pin layers, hover popup, click onSelect.                  |
-| T010 | Add satellite/graphic toggle (Story 6 `satellite_toggle`)        | [ ]    | —                             | T002,T003,T004,T005,T009 | Free provider default (Esri World Imagery or Mapbox) — NO Google billing. Swappable via config.satelliteProvider = esri\|mapbox\|google (prd §4). |
+| T010 | Add satellite/graphic toggle (Story 6 `satellite_toggle`)        | [x]    | —                             | T002,T003,T004,T005,T009 | SatelliteToggle.tsx + MapView setStyle(); Esri World Imagery raster tiles; layers rebuilt on every style.load.                                    |
 | T012 | Pin hover tooltip: name + year (Story 2 `apparition_hover`)      | [x]    | —                             | T007,T009               | Implemented in MapView.tsx as part of T009 — dark popup on mouseenter with name + year.                                                      |
 
 ---
@@ -50,8 +50,8 @@
 | ID   | Task                                                              | Status | Blocks  | Blocked By  | Notes                                                                                                                                                  |
 |------|------------------------------------------------------------------|--------|---------|-------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
 | T013 | Build pre-generated AI summary cache pipeline (Story 4 `ai_summary_cache`) | [x] | T014 | T005,T008 | scripts/generate-summaries.ts — calls claude-sonnet-4-6 for each apparition, writes updated src/data/apparitions.ts. Run: npm run generate-summaries   |
-| T014 | Apparition detail panel: summary, image, source link, badge (Story 3 `apparition_panel`) | [ ] | T015 | T009,T013 | Slide-in panel; title+location+year; "Nihil Obstat / Approved" badge; "View source" link; close button.                                                |
-| T015 | "Regenerate with AI" live Claude call (Story 5 `ai_regenerate`)  | [ ]    | —       | T007,T014   | Live call to latest Claude model (e.g. claude-sonnet-4-6). Requires ANTHROPIC_API_KEY; never hardcode (security.md Pri-1).                              |
+| T014 | Apparition detail panel: summary, image, source link, badge (Story 3 `apparition_panel`) | [x] | T015 | T009,T013 | DetailPanel.tsx — fixed right panel, badge-approved, summary, source link, close button. animate-slide-in.                                             |
+| T015 | "Regenerate with AI" live Claude call (Story 5 `ai_regenerate`)  | [x]    | —       | T007,T014   | api/claudeApi.ts + DetailPanel regenerate button. Uses VITE_ANTHROPIC_API_KEY; dangerouslyAllowBrowser for local-only use.                              |
 
 ---
 
@@ -60,9 +60,9 @@
 
 | ID   | Task                                                              | Status | Blocks | Blocked By | Notes                                                                                                  |
 |------|------------------------------------------------------------------|--------|--------|------------|--------------------------------------------------------------------------------------------------------|
-| T016 | Searchable sidebar that flies map to location (Story 7 `search_sidebar`) | [ ] | — | T009 | Collapsible left sidebar; list name/country/year; click flies map to pin.                              |
-| T017 | Century + country filters with reset (Story 8 `filters`)        | [ ]    | T018   | T009       | Top-bar filter controls; narrow visible pins by century and country.                                   |
-| T018 | Chronological timeline slider (Story 9 `timeline`)              | [ ]    | —      | T017       | Bottom slider reveals pins chronologically across history.                                             |
+| T016 | Searchable sidebar that flies map to location (Story 7 `search_sidebar`) | [x] | — | T009 | SearchSidebar.tsx — collapsible left panel, search input, chronological list, flyTo on click.          |
+| T017 | Century + country filters with reset (Story 8 `filters`)        | [x]    | T018   | T009       | FilterControls.tsx — century + country selects, conditional reset button, reactive GeoJSON filtering.  |
+| T018 | Chronological timeline slider (Story 9 `timeline`)              | [x]    | —      | T017       | TimelineSlider.tsx — fixed bottom range slider, 40 AD–1983, live visible count, gold accent-color.     |
 
 ---
 
@@ -104,7 +104,7 @@ T021 → T022
 | Metric       | Count |
 |--------------|-------|
 | Total tasks  | 22    |
-| Done         | 11    |
+| Done         | 19    |
 | In Progress  | 0     |
-| Remaining    | 11    |
+| Remaining    | 3     |
 | Blocked      | 9     |

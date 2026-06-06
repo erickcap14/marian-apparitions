@@ -46,6 +46,46 @@ This ensures transparency and traceability for all AI-executed workflows.
 
 ## [Unreleased]
 
+### Added (2026-06-05) — Session 4: Dataset expansion + all PRD features
+
+**Dataset expansion — 14 → 23 apparitions** (`marian-apparitions-5su`)
+- Parallel research agents audited Church-approved (Nihil Obstat) apparitions against MiracleHunter.com
+- Added 9 missing formally approved apparitions: Our Lady of the Pillar (Spain, 40 AD), Our Lady of Cotignac (France, 1519), Our Lady of Siluva (Lithuania, 1608), Our Lady of Laus (France, 1664 / Vatican 2008), Our Lady of the Tears (Italy, 1953), Our Lady of Betania (Venezuela, 1976), Our Lady Rosa Mystica (Italy, 1947 / Vatican 2024), Our Lady of Cuapa (Nicaragua, 1980), Our Lady of the Rosary of San Nicolás (Argentina, 1983)
+- Each entry includes GPS coordinates, source URL, and 3-sentence narrative summary
+
+**T010 — Satellite / graphic toggle** (`marian-apparitions-d7y`)
+- `src/components/SatelliteToggle.tsx`: two-segment pill toggle, accessible aria-pressed
+- `src/map/MapView.tsx` refactored: `map.setStyle()` switches between CARTO Dark Matter and Esri World Imagery raster tiles; `style.load` handler rebuilds GeoJSON source and layers after every style change so gold pins survive tile-layer swaps
+
+**T014 — Apparition detail panel** (`marian-apparitions-1da`)
+- `src/components/DetailPanel.tsx`: fixed right panel (w-96, h-full-minus-header), `animate-slide-in`, `panel-celestial` utility class
+- Displays: name (Cinzel/gold), location + year subtitle, `badge-approved`, summary, "View Source →" link
+- Managed `displayedSummary` local state resets on `apparition.id` change via `useEffect`
+
+**T015 — "Regenerate with AI" live Claude call** (`marian-apparitions-1da`)
+- `src/api/claudeApi.ts`: `generateSummary(apparition)` calls `claude-sonnet-4-6` with scholarly system prompt; `dangerouslyAllowBrowser: true` for local-only use; guards on missing `VITE_ANTHROPIC_API_KEY`
+- DetailPanel regenerate button: disabled + tooltip when no key; loading state while in flight
+
+**T016 — Searchable sidebar** (`marian-apparitions-zf2`)
+- `src/components/SearchSidebar.tsx`: collapsible left sidebar with smooth CSS `translateX` transition
+- Search filters name/location/country/year case-insensitively via `useMemo`; list sorted chronologically
+- Toggle tab tracks sidebar edge; selected row gets gold left border; click flies map to pin + closes sidebar
+
+**T017 — Century + country filters** (`marian-apparitions-d7y`)
+- `src/components/FilterControls.tsx`: century and country `<select>` dropdowns; options derived via `useMemo`
+- Ordinal suffix helper handles 11th/12th/13th edge cases; conditional Reset button; sr-only labels for a11y
+- MapView reactive: `filtered` memo re-derives apparitions on prop change; `source.setData()` updates pins without map remount
+
+**T018 — Chronological timeline slider** (`marian-apparitions-d7y`)
+- `src/components/TimelineSlider.tsx`: fixed bottom bar, `h-14`, gold `accentColor` range input
+- 40 AD–1983 range; `formatYear` helper shows "40 AD" vs "1983"; ARIA value attributes for screen readers
+- Shows live visible count; "All years / Showing all" state when at maximum
+
+**App.tsx integration**
+- Manages: `selectedApparition`, `century`, `country`, `timelineYear`, `isSatellite`, `flyToId`
+- `handleSidebarSelect` sets both `selectedApparition` and `flyToId` for coordinated sidebar → map fly
+- All 6 new components wired; `visibleCount` derived for timeline counter
+
 ### Added (2026-06-05) — Session 3: Map + AI pipeline
 
 **T009 — Interactive MapLibre map with glowing gold pins**
