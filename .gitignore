@@ -17,6 +17,9 @@ dist-ssr/
 .env.*.local
 *.pem
 
+# TypeScript build info
+*.tsbuildinfo
+
 # Vite / editor
 *.local
 .DS_Store

@@ -46,7 +46,39 @@ This ensures transparency and traceability for all AI-executed workflows.
 
 ## [Unreleased]
 
-### Added (2026-06-05)
+### Added (2026-06-05) — Session 2: Foundation complete
+
+**T003 — Project scaffold** (`marian-apparitions-3vg`)
+- Vite 5 + React 18 + TypeScript project initialized with all approved deps installed
+- Directory structure per `infra.md`: `src/{components,map,api,hooks,data}`, `public/images`
+- Dev server confirmed working at `http://localhost:5173`
+
+**T004 — SBOM pinned** (`marian-apparitions-8vk`)
+- `sbom.md` updated with exact installed versions (e.g. `maplibre-gl@4.7.1`, `@anthropic-ai/sdk@0.27.3`)
+- Known esbuild moderate vulnerability documented and accepted (local-only app, fix requires Vite 8)
+
+**T005 — Security hygiene** (`marian-apparitions-7sf`)
+- `.gitignore` extended: `node_modules/`, `dist/`, `.env*`, `*.pem`, `*.tsbuildinfo`
+- `.env.example` created with `VITE_ANTHROPIC_API_KEY` placeholder
+
+**T006 — Dataset schema** (`marian-apparitions-m6q`)
+- `src/data/types.ts`: Zod `ApparitionSchema`, `Apparition` type, `ApparitionFilter` interface, `getCentury()` helper
+
+**T007 — Celestial theme** (`marian-apparitions-zgv`)
+- Fonts: Cinzel (headings) + Inter (body) via Google Fonts
+- Full `celestial.*` Tailwind palette (navy, indigo, gold, Marian-blue, star)
+- Canvas `StarField` component with per-star twinkling animation
+- Tailwind component utilities: `.btn-gold`, `.badge-approved`, `.panel-celestial`
+- Keyframe animations: `twinkle`, `pulse-gold`, `fade-in`, `slide-in`
+
+**T008 — Nihil Obstat dataset** (`marian-apparitions-23x`)
+- 14 Church-approved Marian apparitions (1531–1981): Guadalupe, Miraculous Medal, La Salette, Lourdes, Good Help, Pontmain, Pellevoisin, Knock, Fatima, Beauraing, Banneux, Zeitoun, Akita, Kibeho
+- Each entry: precise lat/lng, 3-sentence summary, verified `miraclehunter.com` source URL
+
+**T011 — Geocode + validation** (`marian-apparitions-4zu`)
+- `src/data/validate.ts`: Zod schema check, coordinate range, year bounds, source URL domain — 14/14 pass
+
+### Added (2026-06-05) — Session 1
 
 - Generated `tasks.md` — 22 tasks across 6 phases using `/skill-creator:create-tasklist`.
 - Decided tech stack: **Vite + React + TypeScript**, **MapLibre GL JS**, Tailwind CSS, `@anthropic-ai/sdk`.
