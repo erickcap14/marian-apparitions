@@ -23,6 +23,7 @@ dist-ssr/
 # Agent worktrees and Playwright artifacts
 .claude/worktrees/
 .playwright-mcp/
+qa-*.png
 
 # Vite / editor
 *.local

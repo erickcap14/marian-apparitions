@@ -46,6 +46,28 @@ This ensures transparency and traceability for all AI-executed workflows.
 
 ## [Unreleased]
 
+### Added / Fixed (2026-06-06) — Session 7: Sidebar sync, feast day banner, Medjugorje foundation
+
+**QA pass** — Full browser-driven QA via Playwright. Confirmed: map load, sidebar fly-to, detail panel, satellite toggle, search filter, century filter, timeline slider. Found and fixed one bug (sidebar sync).
+
+**Bug fix: Sidebar filter sync** (`marian-apparitions-h88`)
+- `SearchSidebar.tsx` now receives `century`, `country`, and `timelineYear` as props
+- Sidebar's `filtered` memo applies all three filters in addition to the search query
+- Count header shows `filtered / total` ratio whenever any filter is active
+- Previously: sidebar always showed all 26 apparitions regardless of active filters
+
+**Feature: This Day in History — feast day banner** (`marian-apparitions-dh0`)
+- Added optional `feastDay: string` (MM-DD format) field to `ApparitionSchema` in `types.ts`
+- Added `feastDay` for all 26 apparitions (liturgical feast days or anniversary of first apparition)
+- `TodayFeastBanner.tsx`: dismissable gold banner that appears when today's date matches a feast day; clicking an apparition name in the banner flies the map to it and opens its detail panel
+- Sidebar list items show a gold "Feast Day" badge on matching days
+
+**Feature: Medjugorje page foundation** (`marian-apparitions-5mo` — in progress)
+- "Medjugorje" button added to the header; toggles between map view and Medjugorje page
+- Button highlights gold when active; map state (filters, timeline, selection) is preserved across the toggle
+- `src/pages/MedjugorjePage.tsx` skeleton created with celestial theming and feature description
+- Full feature (messages archive, Claude NLP pipeline, geopolitical events timeline) continues next session
+
 ### Fixed (2026-06-06) — Session 6: Map pin rendering fix + startup script
 
 **Map pin rendering bug** (`src/map/MapView.tsx`)
