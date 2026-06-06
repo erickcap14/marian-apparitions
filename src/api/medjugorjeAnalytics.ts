@@ -12,6 +12,11 @@ const STOPWORDS = new Set([
   'more', 'each', 'one', 'only', 'just', 'even', 'still', 'now', 'than',
 ])
 
+export interface ApiUsage {
+  inputTokens: number
+  outputTokens: number
+}
+
 function getClient(): Anthropic {
   const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
   if (!apiKey) throw new Error('VITE_ANTHROPIC_API_KEY is not set')
@@ -38,10 +43,12 @@ function fallbackSentiments(messages: MedjugorjeMessage[]): SentimentResult[] {
 
 export async function analyzeSentiments(
   messages: MedjugorjeMessage[],
-): Promise<SentimentResult[]> {
+): Promise<{ sentiments: SentimentResult[]; usage: ApiUsage }> {
   const client = getClient()
   const chunks = chunkArray(messages, 20)
   const results: SentimentResult[] = []
+  let totalInputTokens = 0
+  let totalOutputTokens = 0
 
   for (const chunk of chunks) {
     const payload = chunk.map((m) => ({ id: m.id, text: m.text }))
@@ -68,13 +75,15 @@ ${JSON.stringify(payload)}`
         messages: [{ role: 'user', content: userContent }],
       })
 
+      totalInputTokens += response.usage.input_tokens
+      totalOutputTokens += response.usage.output_tokens
+
       const block = response.content[0]
       if (block.type !== 'text') {
         results.push(...fallbackSentiments(chunk))
         continue
       }
 
-      // Strip optional markdown code fences before parsing
       const raw = block.text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '')
 
       try {
@@ -88,14 +97,17 @@ ${JSON.stringify(payload)}`
     }
   }
 
-  return results
+  return {
+    sentiments: results,
+    usage: { inputTokens: totalInputTokens, outputTokens: totalOutputTokens },
+  }
 }
 
 export async function enrichTimeWindow(
   messages: MedjugorjeMessage[],
   events: GeopoliticalEvent[],
   windowLabel: string,
-): Promise<string> {
+): Promise<{ text: string; usage: ApiUsage }> {
   const client = getClient()
 
   const messageTexts = messages
@@ -124,9 +136,14 @@ Please write a concise narrative (3–5 paragraphs) explaining the correlations 
     messages: [{ role: 'user', content: userContent }],
   })
 
+  const usage: ApiUsage = {
+    inputTokens: response.usage.input_tokens,
+    outputTokens: response.usage.output_tokens,
+  }
+
   const block = response.content[0]
-  if (block.type !== 'text') return ''
-  return block.text
+  if (block.type !== 'text') return { text: '', usage }
+  return { text: block.text, usage }
 }
 
 export function computeKeywordFrequency(

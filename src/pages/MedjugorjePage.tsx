@@ -30,6 +30,10 @@ import {
 import { GeopoliticalTimeline } from '../components/GeopoliticalTimeline'
 import { MedjugorjeStats } from '../components/MedjugorjeStats'
 
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
 const EVENT_CATEGORY_COLORS: Record<GeopoliticalEvent['category'], string> = {
   war:       '#ef4444',
   collapse:  '#f97316',
@@ -45,6 +49,46 @@ const THEME_PALETTE = [
 ]
 
 const PAGE_SIZE = 50
+
+// claude-sonnet-4-6 pricing (USD per token)
+const INPUT_PRICE_PER_TOKEN  = 3.00  / 1_000_000
+const OUTPUT_PRICE_PER_TOKEN = 15.00 / 1_000_000
+
+const USAGE_KEY  = 'medjugorje-api-usage'
+const BUDGET_KEY = 'medjugorje-budget'
+
+// ---------------------------------------------------------------------------
+// Usage persistence helpers
+// ---------------------------------------------------------------------------
+
+interface UsageRecord {
+  inputTokens: number
+  outputTokens: number
+  callCount: number
+}
+
+function loadUsage(): UsageRecord {
+  try {
+    const raw = localStorage.getItem(USAGE_KEY)
+    if (raw) return JSON.parse(raw) as UsageRecord
+  } catch { /* ignore */ }
+  return { inputTokens: 0, outputTokens: 0, callCount: 0 }
+}
+
+function saveUsage(u: UsageRecord): void {
+  localStorage.setItem(USAGE_KEY, JSON.stringify(u))
+}
+
+function loadBudget(): number {
+  try {
+    const raw = localStorage.getItem(BUDGET_KEY)
+    if (raw) {
+      const parsed = parseFloat(raw)
+      if (!isNaN(parsed)) return parsed
+    }
+  } catch { /* ignore */ }
+  return 5.00
+}
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -167,7 +211,7 @@ function buildAnalyticsFromSentiments(sentiments: SentimentResult[]): AnalyticsR
   const topKeywords = Object.entries(kwFreq)
     .map(([word, count]) => ({ word, count }))
     .sort((a, b) => b.count - a.count)
-    .slice(0, 20)
+    .slice(0, 10)
   const themeMap: Record<string, string[]> = {}
   sentiments.forEach((s) => {
     s.themes.forEach((t) => {
@@ -199,6 +243,7 @@ export function MedjugorjePage() {
   const [analyticsError, setAnalyticsError] = useState<string | null>(null)
 
   const [selectedTheme, setSelectedTheme] = useState<string | null>(null)
+  const [selectedRecipient, setSelectedRecipient] = useState<MedjugorjeMessage['recipient'] | null>(null)
   const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null)
   const [yearRange, setYearRange] = useState<[number, number]>([1981, 2026])
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
@@ -209,17 +254,20 @@ export function MedjugorjePage() {
 
   const [keywordFreq, setKeywordFreq] = useState<{ word: string; count: number }[]>([])
 
+  const [apiUsage, setApiUsage] = useState<UsageRecord>(loadUsage)
+  const [budget, setBudget] = useState<number>(loadBudget)
+
   const enrichmentRef = useRef<HTMLDivElement>(null)
 
   // Compute keyword frequency locally on mount — no API key needed
   useEffect(() => {
-    setKeywordFreq(computeKeywordFrequency(medjugorjeMessages).slice(0, 20))
+    setKeywordFreq(computeKeywordFrequency(medjugorjeMessages).slice(0, 10))
   }, [])
 
   // Reset visible count when filters change
   useEffect(() => {
     setVisibleCount(PAGE_SIZE)
-  }, [yearRange, selectedTheme])
+  }, [yearRange, selectedTheme, selectedRecipient])
 
   // ---------------------------------------------------------------------------
   // Derived data
@@ -256,7 +304,8 @@ export function MedjugorjePage() {
     [filteredEvents, sentimentYearSet],
   )
 
-  const filteredMessages = useMemo<MedjugorjeMessage[]>(() => {
+  // Messages filtered by year + theme (before recipient filter — used for recipient counts)
+  const baseFilteredMessages = useMemo<MedjugorjeMessage[]>(() => {
     let msgs = medjugorjeMessages.filter(
       (m) => m.year >= yearRange[0] && m.year <= yearRange[1],
     )
@@ -270,28 +319,50 @@ export function MedjugorjePage() {
     return msgs.sort((a, b) => b.year - a.year || b.month - a.month)
   }, [yearRange, selectedTheme, analytics])
 
+  const filteredMessages = useMemo<MedjugorjeMessage[]>(() => {
+    if (!selectedRecipient) return baseFilteredMessages
+    return baseFilteredMessages.filter((m) => m.recipient === selectedRecipient)
+  }, [baseFilteredMessages, selectedRecipient])
+
   const paginatedMessages = filteredMessages.slice(0, visibleCount)
+
+  const recipientCounts = useMemo(() => ({
+    marija:  baseFilteredMessages.filter((m) => m.recipient === 'marija').length,
+    mirjana: baseFilteredMessages.filter((m) => m.recipient === 'mirjana').length,
+    group:   baseFilteredMessages.filter((m) => m.recipient === 'group').length,
+  }), [baseFilteredMessages])
 
   // ---------------------------------------------------------------------------
   // Handlers
   // ---------------------------------------------------------------------------
+
+  function accumulateUsage(added: { inputTokens: number; outputTokens: number }) {
+    setApiUsage((prev) => {
+      const next: UsageRecord = {
+        inputTokens:  prev.inputTokens  + added.inputTokens,
+        outputTokens: prev.outputTokens + added.outputTokens,
+        callCount:    prev.callCount    + 1,
+      }
+      saveUsage(next)
+      return next
+    })
+  }
 
   async function handleRunAnalytics() {
     if (!hasApiKey || isLoadingAnalytics) return
     setIsLoadingAnalytics(true)
     setAnalyticsError(null)
     try {
-      const sentiments = await analyzeSentiments(medjugorjeMessages)
-      // Build analytics result locally from raw sentiments + pre-computed keywords
+      const { sentiments, usage } = await analyzeSentiments(medjugorjeMessages)
+
       const allKeywords = sentiments.flatMap((s) => s.keywords)
       const kwFreq: Record<string, number> = {}
       allKeywords.forEach((w) => { kwFreq[w] = (kwFreq[w] ?? 0) + 1 })
       const topKeywords = Object.entries(kwFreq)
         .map(([word, count]) => ({ word, count }))
         .sort((a, b) => b.count - a.count)
-        .slice(0, 20)
+        .slice(0, 10)
 
-      // Build theme clusters from themes arrays
       const themeMap: Record<string, string[]> = {}
       sentiments.forEach((s) => {
         s.themes.forEach((t) => {
@@ -308,6 +379,7 @@ export function MedjugorjePage() {
 
       setAnalytics({ sentiments, topKeywords, themes, summary: '' })
       setIsPrecomputed(false)
+      accumulateUsage(usage)
     } catch (err) {
       setAnalyticsError(err instanceof Error ? err.message : 'Analytics failed')
     } finally {
@@ -322,8 +394,9 @@ export function MedjugorjePage() {
     setEnrichment(null)
     try {
       const windowLabel = `${yearRange[0]}–${yearRange[1]}`
-      const result = await enrichTimeWindow(filteredMessages, filteredEvents, windowLabel)
-      setEnrichment(result)
+      const { text, usage } = await enrichTimeWindow(filteredMessages, filteredEvents, windowLabel)
+      setEnrichment(text)
+      accumulateUsage(usage)
       setTimeout(() => enrichmentRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
     } catch (err) {
       setEnrichmentError(err instanceof Error ? err.message : 'Enrichment failed')
@@ -340,6 +413,23 @@ export function MedjugorjePage() {
     setSelectedTheme((prev) => (prev === name ? null : name))
   }
 
+  function handleRecipientClick(recipient: MedjugorjeMessage['recipient']) {
+    setSelectedRecipient((prev) => (prev === recipient ? null : recipient))
+  }
+
+  function handleResetUsage() {
+    const reset: UsageRecord = { inputTokens: 0, outputTokens: 0, callCount: 0 }
+    setApiUsage(reset)
+    saveUsage(reset)
+  }
+
+  function handleBudgetChange(val: number) {
+    if (!isNaN(val) && val >= 0) {
+      setBudget(val)
+      localStorage.setItem(BUDGET_KEY, String(val))
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Render helpers
   // ---------------------------------------------------------------------------
@@ -348,38 +438,98 @@ export function MedjugorjePage() {
     const label = isPrecomputed ? 'Run Claude Analytics' : 'Re-run Analytics'
     return (
       <div className="flex flex-col items-end gap-1.5">
-      <button
-        onClick={handleRunAnalytics}
-        disabled={!hasApiKey || isLoadingAnalytics}
-        title={hasApiKey ? undefined : 'Set VITE_ANTHROPIC_API_KEY to enable'}
-        className="inline-flex items-center gap-2 px-4 py-2 border border-celestial-gold/60 text-celestial-gold bg-transparent hover:bg-celestial-gold/10 font-body text-sm rounded-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-celestial-gold"
-      >
-        {isLoadingAnalytics ? (
-          <>
-            <span
-              className="inline-block w-4 h-4 border-2 border-celestial-gold border-t-transparent rounded-full animate-spin"
-              aria-hidden="true"
-            />
-            Analyzing…
-          </>
-        ) : (
-          <>
-            <span aria-hidden="true">✦</span>
-            {label}
-          </>
+        <button
+          onClick={handleRunAnalytics}
+          disabled={!hasApiKey || isLoadingAnalytics}
+          title={hasApiKey ? undefined : 'Set VITE_ANTHROPIC_API_KEY to enable'}
+          className="inline-flex items-center gap-2 px-4 py-2 border border-celestial-gold/60 text-celestial-gold bg-transparent hover:bg-celestial-gold/10 font-body text-sm rounded-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-celestial-gold"
+        >
+          {isLoadingAnalytics ? (
+            <>
+              <span
+                className="inline-block w-4 h-4 border-2 border-celestial-gold border-t-transparent rounded-full animate-spin"
+                aria-hidden="true"
+              />
+              Analyzing…
+            </>
+          ) : (
+            <>
+              <span aria-hidden="true">✦</span>
+              {label}
+            </>
+          )}
+        </button>
+        {isPrecomputed && (
+          <span className="font-body text-xs text-celestial-star-dim">
+            Showing pre-computed data
+          </span>
         )}
-      </button>
-      {isPrecomputed && (
-        <span className="font-body text-xs text-celestial-star-dim">
-          Showing pre-computed data
-        </span>
-      )}
+      </div>
+    )
+  }
+
+  function renderUsagePanel() {
+    const cost = apiUsage.inputTokens * INPUT_PRICE_PER_TOKEN + apiUsage.outputTokens * OUTPUT_PRICE_PER_TOKEN
+    const remaining = budget - cost
+
+    return (
+      <div className="mt-3 p-3 border border-celestial-gold/10 rounded-sm bg-celestial-indigo/20 font-body text-xs text-celestial-star-dim space-y-2">
+        {apiUsage.callCount === 0 ? (
+          <p>No API calls recorded yet.</p>
+        ) : (
+          <div className="flex flex-wrap gap-x-5 gap-y-1 items-center">
+            <span>
+              Tokens:{' '}
+              <span className="text-celestial-star">{apiUsage.inputTokens.toLocaleString()} in</span>
+              {' · '}
+              <span className="text-celestial-star">{apiUsage.outputTokens.toLocaleString()} out</span>
+            </span>
+            <span>
+              Cost:{' '}
+              <span className="text-celestial-star">${cost.toFixed(4)}</span>
+            </span>
+            <span>
+              Budget:{' '}
+              <span className="text-celestial-star">${budget.toFixed(2)}</span>
+            </span>
+            <span className={remaining < 0 ? 'text-red-400' : 'text-emerald-400'}>
+              Remaining: ${remaining.toFixed(2)}
+            </span>
+          </div>
+        )}
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-1.5">
+            Budget $
+            <input
+              type="number"
+              min="0"
+              step="0.50"
+              value={budget}
+              onChange={(e) => handleBudgetChange(parseFloat(e.target.value))}
+              className="w-16 bg-celestial-navy border border-celestial-gold/20 text-celestial-star rounded-sm px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-celestial-gold"
+            />
+          </label>
+          {apiUsage.callCount > 0 && (
+            <button
+              onClick={handleResetUsage}
+              className="text-celestial-star-dim hover:text-celestial-star underline focus:outline-none"
+            >
+              Reset
+            </button>
+          )}
+        </div>
       </div>
     )
   }
 
   const yearOptions: number[] = []
   for (let y = 1981; y <= 2026; y++) yearOptions.push(y)
+
+  const RECIPIENT_STYLE: Record<MedjugorjeMessage['recipient'], { active: string; base: string; dot: string }> = {
+    marija:  { active: 'border-celestial-gold bg-celestial-gold text-celestial-navy',  base: 'border-celestial-gold/40 text-celestial-gold bg-celestial-gold/10',    dot: 'bg-celestial-gold' },
+    mirjana: { active: 'border-celestial-blue bg-celestial-blue text-celestial-navy',  base: 'border-celestial-blue/40 text-celestial-blue bg-celestial-blue/10',    dot: 'bg-celestial-blue' },
+    group:   { active: 'border-purple-400 bg-purple-400 text-celestial-navy',          base: 'border-purple-400/40 text-purple-300 bg-purple-400/10',                  dot: 'bg-purple-400' },
+  }
 
   // ---------------------------------------------------------------------------
   // JSX
@@ -405,6 +555,8 @@ export function MedjugorjePage() {
             <div>{renderAnalyticsButton()}</div>
           </div>
 
+          {hasApiKey && renderUsagePanel()}
+
           {!hasApiKey && (
             <div className="mt-4 px-4 py-3 border border-celestial-gold/30 bg-celestial-gold/5 rounded-sm font-body text-xs text-celestial-star-dim leading-relaxed">
               Charts use pre-computed data and load instantly. Set{' '}
@@ -424,12 +576,80 @@ export function MedjugorjePage() {
         <MedjugorjeStats messages={medjugorjeMessages} />
 
         {/* ------------------------------------------------------------------ */}
+        {/* Claude enrichment panel                                             */}
+        {/* ------------------------------------------------------------------ */}
+        <section ref={enrichmentRef}>
+          <div className="border border-celestial-gold/20 rounded-sm bg-celestial-indigo/30 p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+              <div>
+                <h3 className="font-heading text-celestial-gold text-sm tracking-widest uppercase">
+                  AI Window Analysis
+                </h3>
+                <p className="font-body text-celestial-star-dim text-xs mt-1">
+                  Claude will narrate correlations between messages and world events for{' '}
+                  <span className="text-celestial-star">{yearRange[0]}–{yearRange[1]}</span>
+                </p>
+              </div>
+              <button
+                onClick={handleEnrichWindow}
+                disabled={!hasApiKey || isLoadingEnrichment}
+                title={hasApiKey ? undefined : 'Set VITE_ANTHROPIC_API_KEY to enable'}
+                className="inline-flex items-center gap-2 px-4 py-2 border border-celestial-gold/60 text-celestial-gold bg-transparent hover:bg-celestial-gold/10 font-body text-sm rounded-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-celestial-gold whitespace-nowrap"
+              >
+                {isLoadingEnrichment ? (
+                  <>
+                    <span
+                      className="inline-block w-4 h-4 border-2 border-celestial-gold border-t-transparent rounded-full animate-spin"
+                      aria-hidden="true"
+                    />
+                    Analyzing…
+                  </>
+                ) : (
+                  <>
+                    <span aria-hidden="true">✦</span>
+                    Analyze Window with AI
+                  </>
+                )}
+              </button>
+            </div>
+
+            {enrichmentError && (
+              <p className="font-body text-xs text-red-400 mb-3">{enrichmentError}</p>
+            )}
+
+            {enrichment ? (
+              <div className="border-t border-celestial-gold/10 pt-4">
+                {enrichment.split('\n\n').map((para, idx) => (
+                  <p
+                    key={idx}
+                    className="font-body text-celestial-star text-sm leading-relaxed mb-3 last:mb-0"
+                  >
+                    {para}
+                  </p>
+                ))}
+              </div>
+            ) : !isLoadingEnrichment ? (
+              <p className="font-body text-celestial-star-dim text-xs">
+                Click the button above to generate a narrative analysis of the selected time window.
+              </p>
+            ) : null}
+          </div>
+        </section>
+
+        {/* ------------------------------------------------------------------ */}
         {/* Sentiment trend chart                                               */}
         {/* ------------------------------------------------------------------ */}
         <section>
-          <h3 className="font-heading text-celestial-star text-sm tracking-widest uppercase mb-4">
+          <h3 className="font-heading text-celestial-star text-sm tracking-widest uppercase mb-2">
             Sentiment Trend
           </h3>
+
+          <p className="font-body text-xs text-celestial-star-dim mb-4 leading-relaxed max-w-2xl">
+            Scores range from <span className="text-red-400 font-medium">–1</span> (urgent, warning) to{' '}
+            <span className="text-emerald-400 font-medium">+1</span> (joyful, peaceful). Each year's dot
+            is the average across all messages that year. Vertical lines mark concurrent world events —
+            hover a dot to see the score and events for that year.
+          </p>
 
           {sentimentByYear.length > 0 ? (
             <div className="border border-celestial-gold/10 rounded-sm bg-celestial-indigo/30 p-4">
@@ -457,9 +677,7 @@ export function MedjugorjePage() {
                     content={<SentimentTooltipContent events={chartEvents} />}
                     cursor={{ stroke: 'rgba(212,175,55,0.3)', strokeWidth: 1 }}
                   />
-                  {/* Zero baseline */}
                   <ReferenceLine y={0} stroke="rgba(212,175,55,0.2)" strokeDasharray="4 4" />
-                  {/* Geopolitical event markers */}
                   {chartEvents.map((e) => (
                     <ReferenceLine
                       key={e.id}
@@ -486,7 +704,6 @@ export function MedjugorjePage() {
                 </LineChart>
               </ResponsiveContainer>
 
-              {/* Event legend */}
               <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
                 {(Object.entries(EVENT_CATEGORY_COLORS) as [GeopoliticalEvent['category'], string][]).map(
                   ([cat, color]) => (
@@ -518,16 +735,16 @@ export function MedjugorjePage() {
         </section>
 
         {/* ------------------------------------------------------------------ */}
-        {/* Keyword frequency bar chart                                         */}
+        {/* Top 10 keyword frequency bar chart                                  */}
         {/* ------------------------------------------------------------------ */}
         <section>
           <h3 className="font-heading text-celestial-star text-sm tracking-widest uppercase mb-4">
-            Top Keywords
+            Top 10 Keywords
           </h3>
 
           {keywordFreq.length > 0 ? (
             <div className="border border-celestial-gold/10 rounded-sm bg-celestial-indigo/30 p-4">
-              <ResponsiveContainer width="100%" height={360}>
+              <ResponsiveContainer width="100%" height={220}>
                 <BarChart
                   data={keywordFreq}
                   layout="vertical"
@@ -557,7 +774,7 @@ export function MedjugorjePage() {
                     {keywordFreq.map((entry, idx) => (
                       <Cell
                         key={entry.word}
-                        fill={`rgba(212,175,55,${1 - idx * 0.035})`}
+                        fill={`rgba(212,175,55,${1 - idx * 0.07})`}
                       />
                     ))}
                   </Bar>
@@ -618,50 +835,81 @@ export function MedjugorjePage() {
         {/* ------------------------------------------------------------------ */}
         {/* Message list                                                        */}
         {/* ------------------------------------------------------------------ */}
-        <section>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-            <h3 className="font-heading text-celestial-star text-sm tracking-widest uppercase">
-              Messages
-              <span className="font-body text-celestial-star-dim text-xs normal-case tracking-normal ml-2">
-                ({filteredMessages.length.toLocaleString()} in range)
-              </span>
-            </h3>
+        <section className="pb-10">
+          <div className="flex flex-col gap-3 mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <h3 className="font-heading text-celestial-star text-sm tracking-widest uppercase">
+                Messages
+                <span className="font-body text-celestial-star-dim text-xs normal-case tracking-normal ml-2">
+                  ({filteredMessages.length.toLocaleString()} in range)
+                </span>
+              </h3>
 
-            {/* Year range selectors */}
-            <div className="flex items-center gap-2 font-body text-xs text-celestial-star-dim">
-              <label htmlFor="year-from" className="sr-only">From year</label>
-              <select
-                id="year-from"
-                value={yearRange[0]}
-                onChange={(e) => setYearRange([+e.target.value, yearRange[1]])}
-                className="bg-celestial-indigo border border-celestial-gold/20 text-celestial-star rounded-sm px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-celestial-gold"
-              >
-                {yearOptions.map((y) => (
-                  <option key={y} value={y} disabled={y > yearRange[1]}>
-                    {y}
-                  </option>
-                ))}
-              </select>
-              <span>to</span>
-              <label htmlFor="year-to" className="sr-only">To year</label>
-              <select
-                id="year-to"
-                value={yearRange[1]}
-                onChange={(e) => setYearRange([yearRange[0], +e.target.value])}
-                className="bg-celestial-indigo border border-celestial-gold/20 text-celestial-star rounded-sm px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-celestial-gold"
-              >
-                {yearOptions.map((y) => (
-                  <option key={y} value={y} disabled={y < yearRange[0]}>
-                    {y}
-                  </option>
-                ))}
-              </select>
+              {/* Year range selectors */}
+              <div className="flex items-center gap-2 font-body text-xs text-celestial-star-dim">
+                <label htmlFor="year-from" className="sr-only">From year</label>
+                <select
+                  id="year-from"
+                  value={yearRange[0]}
+                  onChange={(e) => setYearRange([+e.target.value, yearRange[1]])}
+                  className="bg-celestial-indigo border border-celestial-gold/20 text-celestial-star rounded-sm px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-celestial-gold"
+                >
+                  {yearOptions.map((y) => (
+                    <option key={y} value={y} disabled={y > yearRange[1]}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+                <span>to</span>
+                <label htmlFor="year-to" className="sr-only">To year</label>
+                <select
+                  id="year-to"
+                  value={yearRange[1]}
+                  onChange={(e) => setYearRange([yearRange[0], +e.target.value])}
+                  className="bg-celestial-indigo border border-celestial-gold/20 text-celestial-star rounded-sm px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-celestial-gold"
+                >
+                  {yearOptions.map((y) => (
+                    <option key={y} value={y} disabled={y < yearRange[0]}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Recipient filter */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-body text-xs text-celestial-star-dim">Recipient:</span>
+              {(['marija', 'mirjana', 'group'] as MedjugorjeMessage['recipient'][]).map((r) => {
+                const isActive = selectedRecipient === r
+                const style = RECIPIENT_STYLE[r]
+                return (
+                  <button
+                    key={r}
+                    onClick={() => handleRecipientClick(r)}
+                    className={`font-body text-xs px-3 py-1 rounded-full border transition-all duration-150 capitalize focus:outline-none focus:ring-1 focus:ring-celestial-gold ${isActive ? style.active : style.base}`}
+                  >
+                    {r}
+                    <span className="ml-1.5 opacity-70">({recipientCounts[r]})</span>
+                  </button>
+                )
+              })}
+              {selectedRecipient && (
+                <button
+                  onClick={() => setSelectedRecipient(null)}
+                  className="font-body text-xs text-celestial-blue hover:text-celestial-star underline focus:outline-none"
+                >
+                  clear
+                </button>
+              )}
             </div>
           </div>
 
           {filteredMessages.length === 0 ? (
             <p className="font-body text-celestial-star-dim text-sm text-center py-8">
-              No messages found for this range{selectedTheme ? ` and theme "${selectedTheme}"` : ''}.
+              No messages found for this range
+              {selectedTheme ? ` and theme "${selectedTheme}"` : ''}
+              {selectedRecipient ? ` and recipient "${selectedRecipient}"` : ''}.
             </p>
           ) : (
             <>
@@ -688,67 +936,6 @@ export function MedjugorjePage() {
               )}
             </>
           )}
-        </section>
-
-        {/* ------------------------------------------------------------------ */}
-        {/* Claude enrichment panel                                             */}
-        {/* ------------------------------------------------------------------ */}
-        <section ref={enrichmentRef} className="pb-10">
-          <div className="border border-celestial-gold/20 rounded-sm bg-celestial-indigo/30 p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-              <div>
-                <h3 className="font-heading text-celestial-gold text-sm tracking-widest uppercase">
-                  AI Window Analysis
-                </h3>
-                <p className="font-body text-celestial-star-dim text-xs mt-1">
-                  Claude will narrate correlations between messages and world events for{' '}
-                  <span className="text-celestial-star">{yearRange[0]}–{yearRange[1]}</span>
-                </p>
-              </div>
-              <button
-                onClick={handleEnrichWindow}
-                disabled={!hasApiKey || isLoadingEnrichment}
-                title={hasApiKey ? undefined : 'Set VITE_ANTHROPIC_API_KEY to enable'}
-                className="inline-flex items-center gap-2 px-4 py-2 border border-celestial-gold/60 text-celestial-gold bg-transparent hover:bg-celestial-gold/10 font-body text-sm rounded-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-celestial-gold whitespace-nowrap"
-              >
-                {isLoadingEnrichment ? (
-                  <>
-                    <span
-                      className="inline-block w-4 h-4 border-2 border-celestial-gold border-t-transparent rounded-full animate-spin"
-                      aria-hidden="true"
-                    />
-                    Analyzing…
-                  </>
-                ) : (
-                  <>
-                    <span aria-hidden="true">✦</span>
-                    Analyze Window with AI
-                  </>
-                )}
-              </button>
-            </div>
-
-            {enrichmentError && (
-              <p className="font-body text-xs text-red-400 mb-3">{enrichmentError}</p>
-            )}
-
-            {enrichment ? (
-              <div className="border-t border-celestial-gold/10 pt-4">
-                {enrichment.split('\n\n').map((para, idx) => (
-                  <p
-                    key={idx}
-                    className="font-body text-celestial-star text-sm leading-relaxed mb-3 last:mb-0"
-                  >
-                    {para}
-                  </p>
-                ))}
-              </div>
-            ) : !isLoadingEnrichment ? (
-              <p className="font-body text-celestial-star-dim text-xs">
-                Click the button above to generate a narrative analysis of the selected time window.
-              </p>
-            ) : null}
-          </div>
         </section>
 
       </div>
