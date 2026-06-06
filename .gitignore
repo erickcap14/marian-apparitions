@@ -25,6 +25,7 @@ dist-ssr/
 .playwright-mcp/
 qa-*.png
 map-*.png
+medjugorje-*.png
 
 # Vite / editor
 *.local

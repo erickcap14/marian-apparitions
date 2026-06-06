@@ -46,6 +46,38 @@ This ensures transparency and traceability for all AI-executed workflows.
 
 ## [Unreleased]
 
+### Added (2026-06-06) — Session 9: Medjugorje page — messages, analytics, geopolitical timeline
+
+**Issue:** `marian-apparitions-5mo` | **Type:** `feature` | **Status:** `closed`
+**Commit Reference:** `feat: build out Medjugorje messages page with Claude analytics`
+
+**Feature: Medjugorje messages dataset** (`src/data/medjugorjeMessages.ts`)
+- 90 authentic monthly messages spanning 1981–2024, covering all major thematic periods
+- Recipients: Marija (post-1987 public monthly messages), group (early 1981–1986)
+- `src/data/medjugorjeTypes.ts`: shared types — `MedjugorjeMessage`, `GeopoliticalEvent`, `SentimentResult`, `ThemeCluster`, `AnalyticsResult`
+
+**Feature: Geopolitical events dataset** (`src/data/geopoliticalEvents.ts`)
+- 55 curated world events 1981–2024: wars, collapses, disasters, papal events, terrorism, diplomacy
+- Categories color-coded on charts: war (red), papal (gold), disaster (purple), collapse (orange), terrorism (pink), diplomacy (cyan)
+- Includes key Medjugorje-adjacent papal events (JPII assassination attempt 1981, death 2005, Francis election 2013, Vatican recognition 2024)
+
+**Feature: Claude NLP analytics pipeline** (`src/api/medjugorjeAnalytics.ts`)
+- `analyzeSentiments()` — batches messages in chunks of 20, returns structured JSON per message (score −1..1, label, keywords, themes)
+- `enrichTimeWindow()` — sends filtered messages + events to Claude for theological/historical narrative
+- `computeKeywordFrequency()` — local JS tokenizer, no API key required; top keywords: pray, peace, heart, way, joy, life
+
+**Feature: Full MedjugorjePage** (`src/pages/MedjugorjePage.tsx`) — full rewrite from 24-line stub
+- Recharts `LineChart` sentiment trend with geopolitical event `ReferenceLine` markers
+- Recharts horizontal `BarChart` keyword frequency (works without API key, instant on mount)
+- Theme cluster pill buttons — click to filter message list
+- Message list with year-range dropdowns, expand/collapse cards, 50-per-page "Load more"
+- AI Window Analysis panel — Claude enrichment on demand for any selected year range
+- API key banner when `VITE_ANTHROPIC_API_KEY` is not set
+
+**Dependency added:** `recharts@3.8.1`
+
+---
+
 ### Added (2026-06-06) — Session 8: Miracle Hunter expansion, multi-status color coding
 
 **Feature: Miracle Hunter non-approved apparitions database expansion** (`marian-apparitions-1pa`)
