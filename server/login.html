@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Marian Apparitions — Sign In</title>
+    <style>
+      :root {
+        --navy: #0a0a1e;
+        --navy-light: #12123a;
+        --gold: #d4af37;
+        --star: #f5f3e7;
+        --star-dim: #9a97b8;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background:
+          radial-gradient(circle at 50% 20%, #1a1a4a 0%, var(--navy) 60%);
+        color: var(--star);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      }
+      .card {
+        width: min(92vw, 360px);
+        padding: 2.25rem 2rem;
+        background: linear-gradient(to bottom, rgba(18, 18, 58, 0.95), rgba(10, 10, 30, 0.85));
+        border: 1px solid rgba(212, 175, 55, 0.25);
+        border-radius: 6px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+        text-align: center;
+      }
+      h1 {
+        margin: 0 0 0.25rem;
+        font-size: 1.05rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--gold);
+      }
+      p.sub {
+        margin: 0 0 1.75rem;
+        font-size: 0.72rem;
+        letter-spacing: 0.1em;
+        color: var(--star-dim);
+      }
+      label {
+        display: block;
+        text-align: left;
+        font-size: 0.68rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--star-dim);
+        margin-bottom: 0.4rem;
+      }
+      input[type='password'] {
+        width: 100%;
+        padding: 0.65rem 0.75rem;
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        border-radius: 4px;
+        color: var(--star);
+        font-size: 0.95rem;
+        outline: none;
+      }
+      input[type='password']:focus { border-color: var(--gold); }
+      button {
+        margin-top: 1.25rem;
+        width: 100%;
+        padding: 0.65rem;
+        background: rgba(212, 175, 55, 0.18);
+        border: 1px solid var(--gold);
+        border-radius: 4px;
+        color: var(--gold);
+        font-size: 0.78rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      button:hover { background: rgba(212, 175, 55, 0.3); }
+      button:disabled { opacity: 0.5; cursor: default; }
+      .error {
+        margin-top: 1rem;
+        min-height: 1rem;
+        font-size: 0.75rem;
+        color: #e6889a;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1>Marian Apparitions</h1>
+      <p class="sub">Enter the access password to continue</p>
+      <form id="login-form">
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password" autofocus required />
+        <button id="submit" type="submit">Sign In</button>
+        <div class="error" id="error" role="alert"></div>
+      </form>
+    </main>
+    <script>
+      const form = document.getElementById('login-form')
+      const input = document.getElementById('password')
+      const button = document.getElementById('submit')
+      const errorEl = document.getElementById('error')
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault()
+        errorEl.textContent = ''
+        button.disabled = true
+        try {
+          const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: input.value }),
+          })
+          if (res.ok) {
+            window.location.href = '/'
+            return
+          }
+          const data = await res.json().catch(() => ({}))
+          errorEl.textContent = data.error || 'Sign in failed.'
+        } catch {
+          errorEl.textContent = 'Network error. Please try again.'
+        } finally {
+          button.disabled = false
+          input.select()
+        }
+      })
+    </script>
+  </body>
+</html>

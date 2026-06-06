@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, lazy, Suspense } from 'react'
 import { StarField } from './components/StarField'
 import { MapView } from './map/MapView'
 import { DetailPanel } from './components/DetailPanel'
@@ -8,7 +8,10 @@ import { MapLegend } from './components/MapLegend'
 import { TimelineSlider } from './components/TimelineSlider'
 import { SatelliteToggle } from './components/SatelliteToggle'
 import { TodayFeastBanner, getTodayFeastMatches } from './components/TodayFeastBanner'
-import { MedjugorjePage } from './pages/MedjugorjePage'
+
+const MedjugorjePage = lazy(() =>
+  import('./pages/MedjugorjePage').then((m) => ({ default: m.MedjugorjePage }))
+)
 import type { Apparition } from './data/types'
 import { apparitions } from './data/apparitions'
 import { getCentury } from './data/types'
@@ -42,6 +45,14 @@ function App() {
     setCentury(null)
     setCountry(null)
     setStatusFilter(null)
+  }, [])
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' })
+    } finally {
+      window.location.href = '/login'
+    }
   }, [])
 
   const visibleCount = apparitions.filter((a) => {
@@ -106,6 +117,13 @@ function App() {
           >
             Medjugorje
           </button>
+          <button
+            onClick={handleLogout}
+            title="Sign out"
+            className="font-body text-xs tracking-widest uppercase px-3 py-1.5 rounded-sm border border-celestial-gold/40 text-celestial-star-dim hover:border-celestial-gold/70 hover:text-celestial-star transition-colors duration-150"
+          >
+            Sign Out
+          </button>
         </div>
       </header>
 
@@ -116,7 +134,9 @@ function App() {
 
       {/* Main content */}
       {page === 'medjugorje' ? (
-        <MedjugorjePage />
+        <Suspense fallback={<div className="flex items-center justify-center h-full text-celestial-star-dim font-body text-sm tracking-widest">Loading…</div>}>
+          <MedjugorjePage />
+        </Suspense>
       ) : (
         <>
           <main className="relative z-10 h-[calc(100%-64px)]">

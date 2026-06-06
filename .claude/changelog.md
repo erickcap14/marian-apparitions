@@ -46,6 +46,51 @@ This ensures transparency and traceability for all AI-executed workflows.
 
 ## [Unreleased]
 
+### Added (2026-06-06) — Session 12: Secure LAN access (password gate, HTTPS, server-side API key)
+
+**Issue:** `marian-apparitions-yid`
+**Type:** `feature`
+**Status:** `closed`
+**Summary:** Added a Node/Express HTTPS backend so the app can be shared on the local network behind a single shared password, and moved the Anthropic API key server-side so it is never exposed in the browser.
+**Commit Reference:** `feat: secure LAN access — password gate, HTTPS, server-side API proxy (Closes: marian-apparitions-yid)`
+**Date:** 2026-06-06
+
+**Feature: Backend AI proxy** (`server/`)
+- New Express HTTPS server (`server/index.ts`) serves the built `dist/` and the AI endpoints on `0.0.0.0:8443` for LAN access
+- `server/anthropic.ts` holds the Anthropic client (`process.env.ANTHROPIC_API_KEY`); the three former client-side functions (`generateSummary`, `analyzeSentiments`, `enrichTimeWindow`) moved here verbatim (same models/prompts/chunking/usage shapes)
+- `server/routes.ts` exposes `POST /api/summary|sentiments|enrich`, validating bodies with Zod (reuses `ApparitionSchema`)
+
+**Feature: Single-shared-password auth** (`server/auth.ts`, `server/login.html`)
+- Password verified with constant-time `crypto.scrypt` + `timingSafeEqual` (no bcrypt dep)
+- `express-session` (in-memory, httpOnly + sameSite=lax cookie, 8h rolling, regenerate-on-login)
+- `express-rate-limit` (10/15min per IP) + fixed delay on failed login
+- `requireAuth` gates all assets + `/api/*`; unauthenticated browsers redirect to a styled `/login` page; `/api/*` returns 401
+- Sign Out control added to the app header (`src/App.tsx`)
+
+**Feature: HTTPS via self-signed cert** (`server/cert.ts`)
+- `selfsigned` generates `certs/key.pem` + `certs/cert.pem` (gitignored) on first boot
+
+**Security: API key removed from the browser**
+- `src/api/claudeApi.ts` + `src/api/medjugorjeAnalytics.ts` rewritten as `fetch('/api/...')` wrappers (identical return shapes incl. token `usage`); `@anthropic-ai/sdk` + `dangerouslyAllowBrowser` + `VITE_ANTHROPIC_API_KEY` removed from `src/`
+- `hasApiKey` gating dropped in `DetailPanel.tsx` / `MedjugorjePage.tsx` (server owns the key); AI buttons always enabled, errors surfaced via existing error states
+- Verified: `grep` of `dist/` finds no `sk-ant`, no `VITE_ANTHROPIC`, no SDK
+
+**Tooling**
+- New scripts: `server`, `server:dev`, `start:lan`; `start.sh` (the `maryapps` alias) now builds + runs the secure server
+- New deps: `express` 5.2.1, `express-session` 1.19.0, `express-rate-limit` 8.5.2, `helmet` 8.2.0, `selfsigned` 5.5.0, `tsx` 4.22.4, `@types/express`, `@types/express-session`
+- Vite dev proxy forwards `/api` → `https://localhost:8443` (`secure:false`)
+- `.env.example` updated: `ANTHROPIC_API_KEY` (no VITE_ prefix), `APP_PASSWORD`, `SESSION_SECRET`, optional `PORT`
+- Docs updated per precedence: `sbom.md`, `security.md`, `infra.md`, `prd.md`
+
+**Follow-up:** Tighten helmet CSP to an explicit allow-list (Esri tiles + Google fonts) — currently disabled to avoid breaking the map.
+
+**Performance: bundle code-splitting** (same session)
+- `MedjugorjePage` now loaded via `React.lazy` + `Suspense` (`src/App.tsx`) — recharts + analytics deferred to a separate chunk until the page is opened
+- `vite.config.ts` `manualChunks` splits `maplibre-gl` into its own cacheable chunk
+- Initial-load JS dropped from ~461 KB to ~314 KB gzip
+
+---
+
 ### Added (2026-06-06) — Session 11: Medjugorje page — analytics UX, persistence, cost tracking
 
 **Feature: API cost tracker** (`src/pages/MedjugorjePage.tsx`)

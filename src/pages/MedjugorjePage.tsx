@@ -288,8 +288,6 @@ function buildAnalyticsFromSentiments(sentiments: SentimentResult[]): AnalyticsR
 // ---------------------------------------------------------------------------
 
 export function MedjugorjePage() {
-  const hasApiKey = Boolean(import.meta.env.VITE_ANTHROPIC_API_KEY)
-
   // Use persisted live sentiments if available, otherwise fall back to precomputed
   const [analytics, setAnalytics] = useState<AnalyticsResult>(() => {
     const persisted = loadPersistedSentiments()
@@ -430,7 +428,7 @@ export function MedjugorjePage() {
   }
 
   async function handleRunAnalytics() {
-    if (!hasApiKey || isLoadingAnalytics) return
+    if (isLoadingAnalytics) return
     setIsLoadingAnalytics(true)
     setAnalyticsError(null)
     try {
@@ -470,7 +468,7 @@ export function MedjugorjePage() {
   }
 
   async function handleEnrichWindow() {
-    if (!hasApiKey || isLoadingEnrichment) return
+    if (isLoadingEnrichment) return
     setIsLoadingEnrichment(true)
     setEnrichmentError(null)
     try {
@@ -527,8 +525,7 @@ export function MedjugorjePage() {
         <ButtonTooltip tip={tip}>
           <button
             onClick={handleRunAnalytics}
-            disabled={!hasApiKey || isLoadingAnalytics}
-            title={hasApiKey ? undefined : 'Set VITE_ANTHROPIC_API_KEY to enable'}
+            disabled={isLoadingAnalytics}
             className="inline-flex items-center gap-2 px-4 py-2 border border-celestial-gold/60 text-celestial-gold bg-transparent hover:bg-celestial-gold/10 font-body text-sm rounded-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-celestial-gold"
           >
             {isLoadingAnalytics ? (
@@ -663,15 +660,7 @@ export function MedjugorjePage() {
             <div>{renderAnalyticsButton()}</div>
           </div>
 
-          {hasApiKey && renderUsagePanel()}
-
-          {!hasApiKey && (
-            <div className="mt-4 px-4 py-3 border border-celestial-gold/30 bg-celestial-gold/5 rounded-sm font-body text-xs text-celestial-star-dim leading-relaxed">
-              Charts use pre-computed data and load instantly. Set{' '}
-              <code className="text-celestial-gold">VITE_ANTHROPIC_API_KEY</code> in{' '}
-              <code className="text-celestial-gold">.env</code> to run live Claude analytics and AI window analysis.
-            </div>
-          )}
+          {renderUsagePanel()}
 
           {analyticsError && (
             <p className="mt-3 font-body text-xs text-red-400">{analyticsError}</p>
@@ -703,8 +692,7 @@ export function MedjugorjePage() {
               <ButtonTooltip tip="Claude reads the messages and world events in the selected year range and writes a 3–5 paragraph narrative on correlations and theological themes. Results are saved per time window and restored automatically. Estimated cost: ~$0.01 per run.">
                 <button
                   onClick={handleEnrichWindow}
-                  disabled={!hasApiKey || isLoadingEnrichment}
-                  title={hasApiKey ? undefined : 'Set VITE_ANTHROPIC_API_KEY to enable'}
+                  disabled={isLoadingEnrichment}
                   className="inline-flex items-center gap-2 px-4 py-2 border border-celestial-gold/60 text-celestial-gold bg-transparent hover:bg-celestial-gold/10 font-body text-sm rounded-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-celestial-gold whitespace-nowrap"
                 >
                   {isLoadingEnrichment ? (

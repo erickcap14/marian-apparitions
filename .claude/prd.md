@@ -13,10 +13,10 @@ Purpose: This file defines what we are building and for whom, focusing on the pr
 - **Who is this for?** Catholics, pilgrims, students of Church history, and the curious who want an engaging, visual way to discover where and when the Blessed Virgin Mary is believed to have appeared.
 - **What this app will NOT do:**
   - It will NOT include apparitions that lack a Nihil Obstat / formal Church approval.
-  - It will NOT be a public/hosted service — it runs locally on the user's machine only.
+  - It will NOT be a public/internet-hosted service — it runs on the owner's machine and may be shared on the owner's **local network only**, behind a password.
   - It will NOT provide theological rulings or claim to replace official Church documents; it links out to authoritative sources.
   - It will NOT require Google Maps billing (satellite imagery uses a free provider by default).
-  - It will NOT support user accounts, comments, or social features in V1.
+  - It will NOT support individual user accounts, comments, or social features in V1 (LAN access uses a single shared password, not per-user logins).
 
 ---
 
@@ -62,6 +62,6 @@ Purpose: This file defines what we are building and for whom, focusing on the pr
 
 - **Data source of truth:** Holy See / Vatican decrees + MiracleHunter.com "Approved Apparitions." Only Nihil Obstat / formally approved apparitions are included. Each dataset entry cites its `sourceUrl`. Coordinates (lat/long) are looked up per shrine.
 - **Dataset shape (local seed):** `name, location, country, lat, lng, year, status, sourceUrl, imageUrl, summary` — bundled with the app (no live scraping at runtime).
-- **AI summaries (hybrid):** Summaries pre-generated once via the Claude (Anthropic) API and stored in the local dataset for instant display. A "Regenerate with AI" action calls Claude live (requires `ANTHROPIC_API_KEY`). Use the latest capable Claude model (e.g. `claude-opus-4-8` / `claude-sonnet-4-6`).
+- **AI summaries (hybrid):** Summaries pre-generated once via the Claude (Anthropic) API and stored in the local dataset for instant display. A "Regenerate with AI" action calls Claude live **through the backend proxy** — `ANTHROPIC_API_KEY` lives only on the server, never in the browser. Use the latest capable Claude model (e.g. `claude-opus-4-8` / `claude-sonnet-4-6`).
 - **Map / projection:** Default stylized Mercator (vector). Satellite toggle uses a **free** provider (Esri World Imagery or Mapbox) — no Google billing. Provider is swappable via config: `config.satelliteProvider = 'esri' | 'mapbox' | 'google'`.
-- **Hosting:** Local only (runs on the user's machine). No public deployment in V1.
+- **Hosting / sharing:** Runs on the owner's machine. Optional **secure LAN sharing**: a password-gated HTTPS server (single shared password, self-signed cert) lets others on the same local network access it. No public internet deployment in V1.

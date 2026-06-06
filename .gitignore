@@ -17,6 +17,9 @@ dist-ssr/
 .env.*.local
 *.pem
 
+# Self-signed TLS certs for the LAN server (generated at runtime)
+certs/
+
 # TypeScript build info
 *.tsbuildinfo
 

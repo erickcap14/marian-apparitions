@@ -14,9 +14,17 @@ if [ ! -d node_modules ]; then
   npm install
 fi
 
-if [ ! -f .env ] && [ -f .env.example ]; then
-  echo "Note: .env not found. Copy .env.example to .env and add VITE_ANTHROPIC_API_KEY to enable AI features."
+if [ ! -f .env ]; then
+  echo "Error: .env not found."
+  echo "Copy .env.example to .env and set ANTHROPIC_API_KEY, APP_PASSWORD, and SESSION_SECRET."
+  exit 1
 fi
 
-echo "Starting Marian Apparitions at http://localhost:5173"
-npm run dev
+echo "Building the app..."
+npm run build
+
+echo ""
+echo "Starting the secure LAN server (HTTPS, password-protected)."
+echo "Visitors on your network sign in with the shared APP_PASSWORD."
+echo ""
+npm run server

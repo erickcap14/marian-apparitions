@@ -19,8 +19,6 @@ export function DetailPanel({ apparition, onClose }: DetailPanelProps) {
     }
   }, [apparition?.id])
 
-  const hasApiKey = Boolean(import.meta.env.VITE_ANTHROPIC_API_KEY)
-
   async function handleRegenerate() {
     if (!apparition || isRegenerating) return
     setIsRegenerating(true)
@@ -122,8 +120,7 @@ export function DetailPanel({ apparition, onClose }: DetailPanelProps) {
               {/* Regenerate button */}
               <button
                 onClick={handleRegenerate}
-                disabled={!hasApiKey || isRegenerating}
-                title={hasApiKey ? undefined : 'Set VITE_ANTHROPIC_API_KEY to enable'}
+                disabled={isRegenerating}
                 aria-label={isRegenerating ? 'Generating AI summary…' : 'Regenerate summary with AI'}
                 className="w-full mt-3 py-2 text-sm font-body font-medium border border-celestial-gold/40 text-celestial-gold bg-transparent hover:bg-celestial-gold/10 rounded-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-celestial-gold"
               >
