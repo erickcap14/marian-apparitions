@@ -54,10 +54,11 @@ const PAGE_SIZE = 50
 const INPUT_PRICE_PER_TOKEN  = 3.00  / 1_000_000
 const OUTPUT_PRICE_PER_TOKEN = 15.00 / 1_000_000
 
-const USAGE_KEY      = 'medjugorje-api-usage'
-const BUDGET_KEY     = 'medjugorje-budget'
-const ENRICHMENT_KEY = 'medjugorje-enrichments'
-const SENTIMENTS_KEY = 'medjugorje-live-sentiments'
+const USAGE_KEY          = 'medjugorje-api-usage'
+const BUDGET_KEY         = 'medjugorje-budget'
+const BUDGET_SAVED_AT_KEY = 'medjugorje-budget-saved-at'
+const ENRICHMENT_KEY     = 'medjugorje-enrichments'
+const SENTIMENTS_KEY     = 'medjugorje-live-sentiments'
 
 // ---------------------------------------------------------------------------
 // Persistence helpers
@@ -89,7 +90,23 @@ function loadBudget(): number {
       if (!isNaN(parsed)) return parsed
     }
   } catch { /* ignore */ }
-  return 5.00
+  return 99.84
+}
+
+function loadBudgetSavedAt(): string | null {
+  try {
+    return localStorage.getItem(BUDGET_SAVED_AT_KEY)
+  } catch { /* ignore */ }
+  return null
+}
+
+function formatSavedAt(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString(undefined, {
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: 'numeric', minute: '2-digit',
+    })
+  } catch { return iso }
 }
 
 // Enrichments: map of "YYYY–YYYY" window label → narrative text
@@ -296,7 +313,26 @@ export function MedjugorjePage() {
   const [keywordFreq, setKeywordFreq] = useState<{ word: string; count: number }[]>([])
 
   const [apiUsage, setApiUsage] = useState<UsageRecord>(loadUsage)
-  const [budget, setBudget] = useState<number>(loadBudget)
+  const [budget, setBudget] = useState<number>(() => {
+    const val = loadBudget()
+    // Seed localStorage on first load so the value is persisted with a timestamp
+    if (!localStorage.getItem(BUDGET_KEY)) {
+      const now = new Date().toISOString()
+      localStorage.setItem(BUDGET_KEY, String(val))
+      localStorage.setItem(BUDGET_SAVED_AT_KEY, now)
+    }
+    return val
+  })
+  const [budgetSavedAt, setBudgetSavedAt] = useState<string | null>(() => {
+    // If no saved-at exists yet, set one now alongside the default balance seed
+    const existing = loadBudgetSavedAt()
+    if (!existing) {
+      const now = new Date().toISOString()
+      localStorage.setItem(BUDGET_SAVED_AT_KEY, now)
+      return now
+    }
+    return existing
+  })
 
   const enrichmentRef = useRef<HTMLDivElement>(null)
 
@@ -471,8 +507,11 @@ export function MedjugorjePage() {
 
   function handleBudgetChange(val: number) {
     if (!isNaN(val) && val >= 0) {
+      const now = new Date().toISOString()
       setBudget(val)
+      setBudgetSavedAt(now)
       localStorage.setItem(BUDGET_KEY, String(val))
+      localStorage.setItem(BUDGET_SAVED_AT_KEY, now)
     }
   }
 
@@ -525,6 +564,7 @@ export function MedjugorjePage() {
   function renderUsagePanel() {
     const cost = apiUsage.inputTokens * INPUT_PRICE_PER_TOKEN + apiUsage.outputTokens * OUTPUT_PRICE_PER_TOKEN
     const remaining = budget - cost
+    const depleted = remaining <= 0
 
     return (
       <div className="mt-3 p-3 border border-celestial-gold/10 rounded-sm bg-celestial-indigo/20 font-body text-xs text-celestial-star-dim space-y-2">
@@ -543,24 +583,33 @@ export function MedjugorjePage() {
               <span className="text-celestial-star">${cost.toFixed(4)}</span>
             </span>
             <span>
-              Budget:{' '}
+              Balance:{' '}
               <span className="text-celestial-star">${budget.toFixed(2)}</span>
             </span>
-            <span className={remaining < 0 ? 'text-red-400' : 'text-emerald-400'}>
+            <span className={depleted ? 'text-red-400 font-medium' : 'text-emerald-400'}>
               Remaining: ${remaining.toFixed(2)}
             </span>
           </div>
         )}
-        <div className="flex items-center gap-3">
+
+        {depleted && (
+          <p className="text-red-400 leading-snug">
+            ⚠ Balance estimate depleted — add credits at{' '}
+            <span className="text-red-300">console.anthropic.com</span>{' '}
+            and update your balance below.
+          </p>
+        )}
+
+        <div className="flex items-center gap-3 flex-wrap">
           <label className="flex items-center gap-1.5">
-            Budget $
+            Balance $
             <input
               type="number"
               min="0"
-              step="0.50"
+              step="0.01"
               value={budget}
               onChange={(e) => handleBudgetChange(parseFloat(e.target.value))}
-              className="w-16 bg-celestial-navy border border-celestial-gold/20 text-celestial-star rounded-sm px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-celestial-gold"
+              className="w-20 bg-celestial-navy border border-celestial-gold/20 text-celestial-star rounded-sm px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-celestial-gold"
             />
           </label>
           {apiUsage.callCount > 0 && (
@@ -568,8 +617,13 @@ export function MedjugorjePage() {
               onClick={handleResetUsage}
               className="text-celestial-star-dim hover:text-celestial-star underline focus:outline-none"
             >
-              Reset
+              Reset usage
             </button>
+          )}
+          {budgetSavedAt && (
+            <span className="text-celestial-star-dim opacity-60">
+              Updated {formatSavedAt(budgetSavedAt)}
+            </span>
           )}
         </div>
       </div>
