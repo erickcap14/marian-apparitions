@@ -2,17 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --color-navy: #0f0f2e;
-  --color-indigo: #1a1a4e;
-  --color-gold: #f5c842;
-  --color-blue: #4a90d9;
+@layer base {
+  :root {
+    --color-navy: #0a0a1e;
+    --color-indigo: #12123a;
+    --color-gold: #d4af37;
+    --color-gold-bright: #f5c842;
+    --color-blue: #4a90d9;
+    --color-star: #e8e8f8;
+  }
+
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: var(--color-navy);
+    color: var(--color-star);
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: 'Cinzel', Georgia, serif;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-indigo);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-gold);
+    border-radius: 3px;
+  }
 }
 
-html, body, #root {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  background-color: var(--color-navy);
-  color: var(--color-star, #e8e8f8);
+@layer components {
+  .btn-gold {
+    @apply bg-celestial-gold text-celestial-navy font-body font-medium px-4 py-2 rounded-sm
+           hover:bg-celestial-gold-bright transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-celestial-gold-glow;
+  }
+
+  .badge-approved {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs font-body font-medium
+           bg-celestial-gold/20 text-celestial-gold border border-celestial-gold/40;
+  }
+
+  .panel-celestial {
+    @apply bg-celestial-indigo/95 backdrop-blur-sm border border-celestial-gold/20
+           shadow-panel;
+  }
 }

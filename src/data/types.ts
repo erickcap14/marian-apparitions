@@ -15,3 +15,13 @@ export const ApparitionSchema = z.object({
 })
 
 export type Apparition = z.infer<typeof ApparitionSchema>
+
+export interface ApparitionFilter {
+  searchQuery: string
+  century: number | null   // e.g. 19 = 1800s
+  country: string | null
+}
+
+export function getCentury(year: number): number {
+  return Math.ceil(year / 100)
+}
