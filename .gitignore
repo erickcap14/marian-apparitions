@@ -3,3 +3,25 @@
 .dolt/
 *.db
 .beads-credential-key
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+*.pem
+
+# Vite / editor
+*.local
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
