@@ -200,7 +200,7 @@ export function MedjugorjePage() {
 
   const [selectedTheme, setSelectedTheme] = useState<string | null>(null)
   const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null)
-  const [yearRange, setYearRange] = useState<[number, number]>([1981, 2024])
+  const [yearRange, setYearRange] = useState<[number, number]>([1981, 2026])
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
   const [enrichment, setEnrichment] = useState<string | null>(null)
@@ -267,7 +267,7 @@ export function MedjugorjePage() {
         msgs = msgs.filter((m) => ids.has(m.id))
       }
     }
-    return msgs
+    return msgs.sort((a, b) => b.year - a.year || b.month - a.month)
   }, [yearRange, selectedTheme, analytics])
 
   const paginatedMessages = filteredMessages.slice(0, visibleCount)
@@ -379,7 +379,7 @@ export function MedjugorjePage() {
   }
 
   const yearOptions: number[] = []
-  for (let y = 1981; y <= 2024; y++) yearOptions.push(y)
+  for (let y = 1981; y <= 2026; y++) yearOptions.push(y)
 
   // ---------------------------------------------------------------------------
   // JSX
@@ -399,7 +399,7 @@ export function MedjugorjePage() {
                 Our Lady of Medjugorje
               </h2>
               <p className="font-body text-celestial-star-dim text-sm mt-1">
-                Messages · Analytics · Geopolitical Timeline &mdash; 1981–2024
+                Messages · Analytics · Geopolitical Timeline &mdash; 1981–2026
               </p>
             </div>
             <div>{renderAnalyticsButton()}</div>
@@ -439,7 +439,7 @@ export function MedjugorjePage() {
                   <XAxis
                     dataKey="year"
                     type="number"
-                    domain={[1981, 2024]}
+                    domain={[1981, 2026]}
                     tickCount={10}
                     tick={{ fill: '#9090b8', fontSize: 11, fontFamily: 'Inter, system-ui, sans-serif' }}
                     axisLine={{ stroke: 'rgba(212,175,55,0.2)' }}
