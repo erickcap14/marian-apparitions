@@ -55,7 +55,7 @@ export function MedjugorjeStats({ messages }: MedjugorjeStatsProps) {
     }
     const topWords = Object.entries(freq)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
+      .slice(0, 10)
       .map(([word]) => word)
 
     // Decade counts

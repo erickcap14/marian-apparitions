@@ -211,7 +211,7 @@ function buildAnalyticsFromSentiments(sentiments: SentimentResult[]): AnalyticsR
   const topKeywords = Object.entries(kwFreq)
     .map(([word, count]) => ({ word, count }))
     .sort((a, b) => b.count - a.count)
-    .slice(0, 10)
+    .slice(0, 20)
   const themeMap: Record<string, string[]> = {}
   sentiments.forEach((s) => {
     s.themes.forEach((t) => {
@@ -261,7 +261,7 @@ export function MedjugorjePage() {
 
   // Compute keyword frequency locally on mount — no API key needed
   useEffect(() => {
-    setKeywordFreq(computeKeywordFrequency(medjugorjeMessages).slice(0, 10))
+    setKeywordFreq(computeKeywordFrequency(medjugorjeMessages).slice(0, 20))
   }, [])
 
   // Reset visible count when filters change
@@ -361,7 +361,7 @@ export function MedjugorjePage() {
       const topKeywords = Object.entries(kwFreq)
         .map(([word, count]) => ({ word, count }))
         .sort((a, b) => b.count - a.count)
-        .slice(0, 10)
+        .slice(0, 20)
 
       const themeMap: Record<string, string[]> = {}
       sentiments.forEach((s) => {
@@ -739,12 +739,12 @@ export function MedjugorjePage() {
         {/* ------------------------------------------------------------------ */}
         <section>
           <h3 className="font-heading text-celestial-star text-sm tracking-widest uppercase mb-4">
-            Top 10 Keywords
+            Top Keywords
           </h3>
 
           {keywordFreq.length > 0 ? (
             <div className="border border-celestial-gold/10 rounded-sm bg-celestial-indigo/30 p-4">
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={360}>
                 <BarChart
                   data={keywordFreq}
                   layout="vertical"
@@ -774,7 +774,7 @@ export function MedjugorjePage() {
                     {keywordFreq.map((entry, idx) => (
                       <Cell
                         key={entry.word}
-                        fill={`rgba(212,175,55,${1 - idx * 0.07})`}
+                        fill={`rgba(212,175,55,${1 - idx * 0.035})`}
                       />
                     ))}
                   </Bar>
