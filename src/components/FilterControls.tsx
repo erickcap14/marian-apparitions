@@ -34,7 +34,7 @@ const SELECT_CLASS = [
   'px-2 py-1.5',
   'rounded-sm',
   'cursor-pointer',
-  'focus:outline-none focus:border-celestial-gold/60',
+  'focus:outline-none focus:border-celestial-gold/60 focus:ring-2 focus:ring-yellow-400/50',
   'hover:border-celestial-gold/50',
   'transition-colors',
 ].join(' ')
@@ -47,6 +47,7 @@ const RESET_CLASS = [
   'rounded-sm',
   'hover:border-celestial-gold/40',
   'transition-colors',
+  'focus:outline-none focus:ring-2 focus:ring-yellow-400/50',
 ].join(' ')
 
 export function FilterControls({

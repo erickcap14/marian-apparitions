@@ -1,79 +1,125 @@
-<!-- NOTE: THIS ENTIRE FILE IS OPTIONAL! YOU CAN, AND SHOULD, AVOID USING THIS FILE UNLESS YOU KNOW EXACTLY HOW TO IMPLEMENT THIS. WHEN IN DOUBT, ANY LLM SHOULD BE ABLE TO HELP YOU FIGURE THIS OUT FOR YOUR PROJECT! -->
-
 # Testing Strategy
 
-Purpose: This file outlines the strategy for testing the application to ensure it works correctly and prevent future bugs.
-
-> This file explains how we'll test the application to make sure it works correctly and doesn't break when we make changes. A good testing plan gives us confidence to build and release new features.
+Purpose: This file documents the testing philosophy, tooling, and key scenarios for the Marian Apparitions app.
 
 ---
 
-## 1. Our Testing Philosophy
+## 1. Testing Philosophy
 
-> What is our main goal for testing? We don't need to test every single line of code. Let's define what's most important.
+**Overall Goal: Ensure the most critical user journeys always work.**
 
-- **Overall Goal:** [e.g., Ensure the most critical user journeys always work, Achieve 80% code coverage, Prevent regressions]
+We do not aim for line-coverage metrics. Instead, we test at the boundary of what a user actually does: load the map, click a pin, search for an apparition, and regenerate an AI summary. Implementation details (internal state shape, CSS class names, private helper functions) are not tested directly. If a user journey still works correctly, the test passes — regardless of how the internals were refactored.
 
-  - **_Example 1 (Local Python App):_**
-    **Overall Goal: Ensure the core logic is correct.** The main goal is to verify that the data processing functions produce the correct output for a given input.
+Key principles:
 
-  - **_Example 2 (Next.js + Supabase App):_**
-    **Overall Goal: Ensure the most critical user journeys always work.** We want to guarantee that a user can always sign up, log in, create a post, and view their dashboard.
-
----
-
-## 2. Types of Tests We Will Write
-
-> Different kinds of tests check different things. Here's a quick breakdown of what we'll use.
-
-- **Unit Tests:** [Do we write these? What do they test? e.g., Yes, for individual functions and UI components in isolation.]
-- **Integration Tests:** [Do we write these? What do they test? e.g., Yes, to check if our UI components correctly fetch data from the backend.]
-- **End-to-End (E2E) Tests:** [Do we write these? What do they test? e.g., No, not at this stage. OR Yes, to simulate a full user journey in a real browser.]
-
-  - **_Example 1 (Local Python App):_**
-    **Unit Tests: Yes, for individual functions.** We will write tests to check that each data transformation function works as expected.
-    **Integration Tests: No.** The script is simple and doesn't have many integrated parts.
-    **End-to-End (E2E) Tests: No.**
-
-  - **_Example 2 (Next.js + Supabase App):_**
-    **Unit Tests: Yes, for individual React components and utility functions.** We'll test that components render correctly given specific props.
-    **Integration Tests: Yes, to check if UI components correctly interact with Supabase.** For example, we'll test that clicking the "Log In" button calls the `supabase.auth.signInWithPassword` function.
-    **End-to-End (E2E) Tests: Yes, for the login and new post flows.** We will write a small number of E2E tests to simulate these critical paths from start to finish.
+- **Test user journeys, not implementation.** Write tests from the user's perspective: what they see and what they can interact with.
+- **Prefer rendering components with realistic props** over mocking deeply nested internals.
+- **Mock only at the system boundary.** The Anthropic API and MapLibre GL (which requires WebGL) are the only things that must be mocked in the jsdom environment.
+- **Avoid snapshot tests.** They couple tests to markup structure and break on innocent style changes.
 
 ---
 
-## 3. Testing Frameworks & Tools
+## 2. Testing Frameworks & Tools
 
-> What software will we use to write and run our tests?
+| Tool | Version | Purpose |
+|------|---------|---------|
+| [Vitest](https://vitest.dev/) | ^4.1.8 | Test runner — native Vite integration, fast HMR-aware re-runs |
+| [@testing-library/react](https://testing-library.com/docs/react-testing-library/intro/) | ^16.3.2 | Render React components in jsdom, query by accessible roles/labels |
+| [@testing-library/user-event](https://testing-library.com/docs/user-event/intro/) | ^14.6.1 | Simulate real user interactions (type, click, keyboard) |
+| [jsdom](https://github.com/jsdom/jsdom) | ^29.1.1 | DOM environment for headless tests (no real browser required) |
+| [@vitest/coverage-v8](https://vitest.dev/guide/coverage) | ^4.1.8 | Optional coverage report via V8 |
 
-- **Main Testing Tool(s):** [e.g., pytest, Jest, React Testing Library, Cypress]
-- **How to Run Tests (Command):** [e.g., `pytest`, `npm test`, `npm run cypress:open`]
-
-  - **_Example 1 (Local Python App):_**
-    **Main Testing Tool(s): `pytest`**. It's a standard, easy-to-use testing framework for Python.
-    **How to Run Tests (Command): `pytest`**.
-
-  - **_Example 2 (Next.js + Supabase App):_**
-    **Main Testing Tool(s): `Jest` and `React Testing Library`** for unit and integration tests. `Cypress` for end-to-end tests.
-    **How to Run Tests (Command): `npm test`** for Jest, and **`npm run cypress:run`** for Cypress.
+Test environment is configured in `vite.config.ts` under the `test` block:
+- `environment: 'jsdom'` — browser-like DOM in Node
+- `globals: true` — no need to import `describe`/`it`/`expect` in each file
+- `setupFiles: ['./src/test/setup.ts']` — global test setup (env stubs)
 
 ---
 
-## 4. Key Test Scenarios
+## 3. How to Run Tests
 
-> Let's list the most important user actions that absolutely must work. This helps us prioritize what to test first. Think back to the "User Stories" in your `prd.md` file.
+```bash
+# Run all tests once (CI mode)
+npm test
 
-- **Scenario 1:** [e.g., A user should be able to log in with correct credentials.]
-- **Scenario 2:** [e.g., A user should see an error if they try to log in with the wrong password.]
-- **Scenario 3:** [e.g., A logged-in user should be able to create a new item.]
+# Run in watch mode during development (re-runs on file save)
+npm run test:watch
 
-  - **_Example 1 (Local Python App):_**
-    **Scenario 1:** The script should correctly parse a standard input file.
-    **Scenario 2:** The script should raise an error if an input file is improperly formatted.
-    **Scenario 3:** The script should produce an output file with the correct calculations.
+# Run with coverage report
+npx vitest run --coverage
+```
 
-  - **_Example 2 (Next.js + Supabase App):_**
-    **Scenario 1:** A user can sign up for a new account.
-    **Scenario 2:** A user can log in and is redirected to the dashboard.
-    **Scenario 3:** A logged-in user can create a new post, and it appears in their list of posts.
-    **Scenario 4:** A user cannot see or edit posts created by another user.
+Test files live alongside the code they cover under `src/`, named `*.test.tsx` or `*.test.ts`.
+
+---
+
+## 4. What to Test — Key Scenarios
+
+### 4.1 Map loads (Story 1: `map_globe`)
+- `MapView` component renders without crashing.
+- MapLibre GL JS must be mocked (requires WebGL canvas unavailable in jsdom).
+- Assert that the map container `<div>` is present in the DOM.
+- Assert that `onSelect` callback is callable.
+
+### 4.2 Pin click opens detail panel (Story 3: `apparition_panel`)
+- Render `App` (or `DetailPanel` with a mock apparition prop).
+- Simulate selecting an apparition (call `onSelect` with a fixture).
+- Assert that `DetailPanel` appears with the correct apparition name, year, and location.
+- Assert the "Close" button dismisses the panel (sets selected back to null).
+
+### 4.3 Search sidebar filters list (Story 7: `search_sidebar`)
+- Render `SearchSidebar` with the full apparitions dataset.
+- Type a search term (e.g. "Fatima") into the search input.
+- Assert that only matching entries appear in the list.
+- Assert that clicking an entry fires `onSelect` with the correct apparition.
+
+### 4.4 AI regenerate button (Story 5: `ai_regenerate`)
+- Render `DetailPanel` with a mock apparition and `VITE_ANTHROPIC_API_KEY` set.
+- Mock `claudeApi.generateSummary` to resolve with a known string.
+- Click the "Regenerate with AI" button.
+- Assert loading state is shown while the mock resolves.
+- Assert the new summary text appears after resolution.
+- Assert an error message appears if the mock rejects.
+
+### 4.5 Filter controls narrow visible pins (Story 8: `filters`)
+- Render `FilterControls` with a mock list of apparitions and a mock `onFilter` callback.
+- Select a century from the dropdown.
+- Assert `onFilter` is called with the correctly filtered subset.
+
+### 4.6 Timeline slider restricts visible pins (Story 9: `timeline`)
+- Render `TimelineSlider` with default min/max and a mock `onRangeChange`.
+- Drag (or set value of) the range input.
+- Assert `onRangeChange` is called with the updated year range.
+
+---
+
+## 5. Mocking Conventions
+
+### MapLibre GL
+MapLibre requires a real WebGL context. In jsdom tests, mock the entire module:
+
+```ts
+vi.mock('maplibre-gl', () => ({
+  default: {
+    Map: vi.fn().mockImplementation(() => ({
+      on: vi.fn(),
+      addSource: vi.fn(),
+      addLayer: vi.fn(),
+      setStyle: vi.fn(),
+      remove: vi.fn(),
+    })),
+  },
+}))
+```
+
+### Anthropic Claude API
+Mock at the `src/api/claudeApi` boundary so the real HTTP call is never made:
+
+```ts
+vi.mock('../api/claudeApi', () => ({
+  generateSummary: vi.fn().mockResolvedValue('Mocked summary text.'),
+}))
+```
+
+### `import.meta.env`
+The global test setup (`src/test/setup.ts`) stubs `import.meta.env` with an empty API key by default. Override per-test with `vi.stubEnv` when the key-presence behaviour matters.

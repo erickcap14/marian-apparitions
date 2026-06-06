@@ -35,9 +35,9 @@ export function TimelineSlider({
           max={maxYear}
           value={value}
           onChange={e => onChange(Number(e.target.value))}
-          className="w-48 sm:w-64 cursor-pointer"
+          className="w-48 sm:w-64 cursor-pointer focus:outline-none focus:ring-2 focus:ring-yellow-400/60 rounded"
           style={{ accentColor: '#d4af37' }}
-          aria-label="Timeline year filter"
+          aria-label="Filter by year"
           aria-valuemin={minYear}
           aria-valuemax={maxYear}
           aria-valuenow={value}

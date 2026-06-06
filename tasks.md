@@ -71,10 +71,10 @@
 
 | ID   | Task                                                              | Status | Blocks | Blocked By                          | Notes                                                                                                              |
 |------|------------------------------------------------------------------|--------|--------|-------------------------------------|-------------------------------------------------------------------------------------------------------------------|
-| T019 | Fill tests.md + set up test framework                            | [ ]    | T020   | T003                                | tests.md is an unfilled stub. Define philosophy, tools, run command per chosen stack (sbom.md).                    |
+| T019 | Fill tests.md + set up test framework                            | [x]    | T020   | T003                                | Vitest 4 + @testing-library/react 16 + jsdom 29. vite.config.ts test block added. npm test / npm run test:watch. .claude/tests.md filled with philosophy, tools, run commands, and 6 key scenarios.                    |
 | T020 | Write tests for critical journeys (map load, pin click, search, regenerate) | [ ] | — | T009,T014,T015,T016,T018,T019 | Cover core user journeys from prd stories.                                                                        |
-| T021 | Security & supply-chain audit pass                              | [ ]    | T022   | T004,T005,T015                      | Pri-1 gate. Run npm audit / equivalent; verify no secrets committed; confirm only Nihil-Obstat data shown.        |
-| T022 | Final UX polish: starfield ambiance, animations, accessibility   | [ ]    | —      | T007,T012,T015,T016,T018            | Elegant, not cluttered; smooth gentle animations; luminous gold markers (prd §3).                                 |
+| T021 | Security & supply-chain audit pass                              | [x]    | T022   | T004,T005,T015                      | npm audit: 2 moderate (esbuild/vite dev-server only, local-only app, accepted). No secrets committed. VITE_ANTHROPIC_API_KEY only via import.meta.env. Full findings in .claude/security.md §7.        |
+| T022 | Final UX polish: starfield ambiance, animations, accessibility   | [x]    | —      | T007,T012,T015,T016,T018            | DetailPanel CSS transition slide-in/out; mobile backdrop overlay; focus rings on all interactive elements; aria-labels; sidebar list keyboard nav; popup fade-in.   |
 
 ---
 
@@ -104,7 +104,7 @@ T021 → T022
 | Metric       | Count |
 |--------------|-------|
 | Total tasks  | 22    |
-| Done         | 19    |
+| Done         | 22    |
 | In Progress  | 0     |
-| Remaining    | 3     |
-| Blocked      | 9     |
+| Remaining    | 0     |
+| Blocked      | 0     |

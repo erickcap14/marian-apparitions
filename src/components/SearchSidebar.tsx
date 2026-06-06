@@ -53,14 +53,19 @@ export function SearchSidebar({ apparitions, selectedId, onSelect }: SearchSideb
 
         {/* Search input */}
         <div className="px-4 pb-3 shrink-0">
+          <label htmlFor="sidebar-search" className="sr-only">
+            Search apparitions
+          </label>
           <input
+            id="sidebar-search"
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search apparitions…"
+            aria-label="Search apparitions by name, location, country, or year"
             className="w-full bg-celestial-navy border border-celestial-gold/30
               text-celestial-star font-body text-sm px-3 py-2 rounded-sm
-              focus:outline-none focus:border-celestial-gold/60
+              focus:outline-none focus:border-celestial-gold/60 focus:ring-2 focus:ring-celestial-gold/40
               placeholder:text-celestial-star-dim"
           />
         </div>
@@ -82,8 +87,14 @@ export function SearchSidebar({ apparitions, selectedId, onSelect }: SearchSideb
                   <li
                     key={a.id}
                     onClick={() => handleSelect(a)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelect(a) } }}
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={isSelected}
+                    aria-label={`${a.name}, ${a.country}, ${a.year}`}
                     className={[
                       'px-4 py-3 cursor-pointer transition-colors duration-150',
+                      'focus:outline-none focus:ring-2 focus:ring-inset focus:ring-yellow-400/50',
                       isSelected
                         ? 'bg-celestial-gold/10 border-l-2 border-celestial-gold'
                         : 'border-l-2 border-transparent hover:bg-celestial-indigo-light/50',
@@ -112,11 +123,13 @@ export function SearchSidebar({ apparitions, selectedId, onSelect }: SearchSideb
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+        aria-expanded={isOpen}
         className="fixed z-30 flex items-center justify-center
           w-8 h-24 top-1/2 -translate-y-1/2
           bg-celestial-indigo/90 border-r border-t border-b border-celestial-gold/20
           text-celestial-gold hover:text-celestial-gold-bright
-          rounded-r-sm transition-all duration-300 ease-in-out"
+          rounded-r-sm transition-all duration-300 ease-in-out
+          focus:outline-none focus:ring-2 focus:ring-celestial-gold focus:ring-inset"
         style={{ left: isOpen ? '288px' : '0px' }}
       >
         <span className="text-lg leading-none select-none" aria-hidden="true">

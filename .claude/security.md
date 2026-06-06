@@ -62,3 +62,47 @@ Purpose: This file establishes the security rules and best practices for the Mar
 - Only Nihil Obstat / formally approved apparitions are included in the dataset. No runtime scraping. The dataset is bundled with the app and reviewed by the maintainer.
 - Source URLs must point to trusted domains only: `vatican.va`, `miraclehunter.com`, or official shrine sites.
 - Dataset entries are validated at build time with Zod against the `Apparition` schema defined in `infra.md`.
+
+---
+
+## 7. Audit Results (2026-06-05)
+
+### 7.1 `npm audit` Output
+
+Total vulnerabilities found: **2 moderate, 0 high, 0 critical**.
+
+| Package | Severity | Affected Range | Advisory |
+|---------|----------|---------------|---------|
+| `esbuild` | Moderate | `<=0.24.2` | [GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99) — esbuild dev server allows cross-origin requests |
+| `vite` | Moderate | `<=6.4.1` | [GHSA-4w7w-66w2-5vf9](https://github.com/advisories/GHSA-4w7w-66w2-5vf9) — Vite path traversal in optimized deps `.map` handling; also depends on vulnerable esbuild |
+
+**Fix available:** `npm audit fix --force` would upgrade Vite to v8 (breaking change). Not applied at this time — see acceptance rationale below.
+
+**Acceptance rationale (local-only app):**
+
+Both vulnerabilities affect the **Vite development server only** (not the production build). The attack vectors require:
+- A malicious website open in the same browser while the dev server is running, OR
+- Network-adjacent access to the local dev server port (default: `localhost:5173`).
+
+Since this app is never deployed publicly and is only run locally by the machine owner, the risk surface is effectively zero in normal operation. These findings are **accepted as-is** for the current version. They should be re-evaluated if Vite is upgraded or the app is ever deployed.
+
+### 7.2 `.env` / Secrets Audit
+
+| Check | Result |
+|-------|--------|
+| `.env` committed to git? | **No** — confirmed via `git ls-files \| grep .env`. Only `.env.example` (no secrets) is tracked. |
+| `.gitignore` covers `.env*`? | **Yes** — `.env`, `.env.local`, `.env.*.local` are all listed in `.gitignore`. |
+| `VITE_ANTHROPIC_API_KEY` accessed only via `import.meta.env`? | **Yes** — grep of `src/` confirms all references use `import.meta.env.VITE_ANTHROPIC_API_KEY`. No other access pattern found. |
+| Hardcoded API keys in source files? | **No** — grep of `src/` and `scripts/` found no literal `sk-ant-...` keys. `scripts/generate-summaries.ts` shows `sk-ant-...` only in a comment/usage example string (not a real key). |
+
+### 7.3 Data Integrity Check
+
+- All 14 apparitions in `src/data/apparitions.ts` are Church-approved (Nihil Obstat) and sourced from `miraclehunter.com`.
+- No runtime scraping occurs. The dataset is static and bundled with the app.
+- Zod validation (`src/data/validate.ts`) confirms all 14 entries pass the `Apparition` schema.
+
+### 7.4 Overall Assessment
+
+**Status: PASS (with accepted findings)**
+
+The app meets its security requirements for a local-only tool. No action required before continuing development. The two moderate-severity `npm audit` findings are documented and accepted per the rationale in §7.1.

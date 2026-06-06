@@ -13,6 +13,7 @@ export function SatelliteToggle({ mode, onToggle }: SatelliteToggleProps) {
     'px-3 py-1.5',
     'transition-colors',
     'cursor-pointer',
+    'focus:outline-none focus:ring-2 focus:ring-inset focus:ring-yellow-400/60',
   ].join(' ')
 
   const inactiveClass = [
@@ -22,6 +23,7 @@ export function SatelliteToggle({ mode, onToggle }: SatelliteToggleProps) {
     'px-3 py-1.5',
     'transition-colors',
     'cursor-pointer',
+    'focus:outline-none focus:ring-2 focus:ring-inset focus:ring-yellow-400/60',
   ].join(' ')
 
   return (

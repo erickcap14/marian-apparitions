@@ -10,6 +10,7 @@ interface DetailPanelProps {
 export function DetailPanel({ apparition, onClose }: DetailPanelProps) {
   const [displayedSummary, setDisplayedSummary] = useState<string>('')
   const [isRegenerating, setIsRegenerating] = useState(false)
+  const isOpen = apparition !== null
 
   useEffect(() => {
     if (apparition) {
@@ -17,8 +18,6 @@ export function DetailPanel({ apparition, onClose }: DetailPanelProps) {
       setIsRegenerating(false)
     }
   }, [apparition?.id])
-
-  if (!apparition) return null
 
   const hasApiKey = Boolean(import.meta.env.VITE_ANTHROPIC_API_KEY)
 
@@ -36,84 +35,103 @@ export function DetailPanel({ apparition, onClose }: DetailPanelProps) {
   }
 
   return (
-    <div
-      className={[
-        'panel-celestial',
-        'fixed right-0 top-[64px]',
-        'w-full max-w-full sm:w-96',
-        'h-[calc(100vh-64px)]',
-        'overflow-y-auto',
-        'z-20',
-        'animate-slide-in',
-        'flex flex-col',
-        'p-6',
-      ].join(' ')}
-    >
-      {/* Close button */}
-      <button
+    <>
+      {/* Mobile backdrop overlay — dims the map when panel is open */}
+      <div
+        className="fixed inset-0 z-[19] bg-celestial-navy/60 sm:hidden transition-opacity duration-300"
+        style={{ opacity: isOpen ? 1 : 0, pointerEvents: isOpen ? 'auto' : 'none' }}
         onClick={onClose}
-        className="absolute top-4 right-4 text-2xl leading-none text-celestial-star-dim hover:text-celestial-gold transition-colors"
-        aria-label="Close panel"
+        aria-hidden="true"
+      />
+
+      {/* Detail panel */}
+      <div
+        className={[
+          'panel-celestial',
+          'fixed right-0 top-[64px]',
+          'w-full max-w-full sm:w-96',
+          'h-[calc(100vh-64px)]',
+          'overflow-y-auto',
+          'z-20',
+          'flex flex-col',
+          'p-6',
+          'transition-transform duration-300 ease-in-out',
+        ].join(' ')}
+        style={{ transform: isOpen ? 'translateX(0)' : 'translateX(100%)' }}
+        role="region"
+        aria-label={apparition ? `Details for ${apparition.name}` : 'Apparition details'}
       >
-        &times;
-      </button>
-
-      {/* Title */}
-      <h2 className="font-heading text-celestial-gold text-xl pr-8 mb-1">
-        {apparition.name}
-      </h2>
-
-      {/* Subtitle */}
-      <p className="font-body text-celestial-star-dim text-sm mb-3">
-        {apparition.location}, {apparition.country}&nbsp;&middot;&nbsp;{apparition.year}
-      </p>
-
-      {/* Badge */}
-      <div className="mb-4">
-        <span className="badge-approved">&#10003; Nihil Obstat / Approved</span>
-      </div>
-
-      {/* Divider */}
-      <hr className="border-celestial-gold/20 mb-4" />
-
-      {/* Summary section */}
-      <div className="flex-1">
-        <p className="text-xs font-body tracking-widest text-celestial-star-dim uppercase mb-2">
-          Summary
-        </p>
-        {isRegenerating ? (
-          <p className="font-body text-celestial-star-dim text-sm leading-relaxed italic">
-            Generating summary&hellip;
-          </p>
-        ) : (
-          <p className="font-body text-celestial-star text-sm leading-relaxed">
-            {displayedSummary}
-          </p>
-        )}
-
-        {/* Regenerate button */}
+        {/* Close button */}
         <button
-          onClick={handleRegenerate}
-          disabled={!hasApiKey || isRegenerating}
-          title={hasApiKey ? undefined : 'Set VITE_ANTHROPIC_API_KEY to enable'}
-          className="w-full mt-3 py-2 text-sm font-body font-medium border border-celestial-gold/40 text-celestial-gold bg-transparent hover:bg-celestial-gold/10 rounded-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          onClick={onClose}
+          className="absolute top-4 right-4 text-2xl leading-none text-celestial-star-dim hover:text-celestial-gold transition-colors focus:outline-none focus:ring-2 focus:ring-celestial-gold rounded-sm"
+          aria-label="Close apparition detail panel"
         >
-          {isRegenerating ? 'Generating…' : '❆ Regenerate with AI'}
+          &times;
         </button>
+
+        {apparition && (
+          <>
+            {/* Title */}
+            <h2 className="font-heading text-celestial-gold text-xl pr-8 mb-1">
+              {apparition.name}
+            </h2>
+
+            {/* Subtitle */}
+            <p className="font-body text-celestial-star-dim text-sm mb-3">
+              {apparition.location}, {apparition.country}&nbsp;&middot;&nbsp;{apparition.year}
+            </p>
+
+            {/* Badge */}
+            <div className="mb-4">
+              <span className="badge-approved">&#10003; Nihil Obstat / Approved</span>
+            </div>
+
+            {/* Divider */}
+            <hr className="border-celestial-gold/20 mb-4" />
+
+            {/* Summary section */}
+            <div className="flex-1">
+              <p className="text-xs font-body tracking-widest text-celestial-star-dim uppercase mb-2">
+                Summary
+              </p>
+              {isRegenerating ? (
+                <p className="font-body text-celestial-star-dim text-sm leading-relaxed italic">
+                  Generating summary&hellip;
+                </p>
+              ) : (
+                <p className="font-body text-celestial-star text-sm leading-relaxed">
+                  {displayedSummary}
+                </p>
+              )}
+
+              {/* Regenerate button */}
+              <button
+                onClick={handleRegenerate}
+                disabled={!hasApiKey || isRegenerating}
+                title={hasApiKey ? undefined : 'Set VITE_ANTHROPIC_API_KEY to enable'}
+                aria-label={isRegenerating ? 'Generating AI summary…' : 'Regenerate summary with AI'}
+                className="w-full mt-3 py-2 text-sm font-body font-medium border border-celestial-gold/40 text-celestial-gold bg-transparent hover:bg-celestial-gold/10 rounded-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-celestial-gold"
+              >
+                {isRegenerating ? 'Generating…' : '❆ Regenerate with AI'}
+              </button>
+            </div>
+
+            {/* Divider */}
+            <hr className="border-celestial-gold/20 my-4" />
+
+            {/* Source link */}
+            <a
+              href={apparition.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-celestial-blue text-sm hover:text-celestial-star transition-colors focus:outline-none focus:ring-2 focus:ring-celestial-gold rounded-sm"
+            >
+              View Source &rarr;
+            </a>
+          </>
+        )}
       </div>
-
-      {/* Divider */}
-      <hr className="border-celestial-gold/20 my-4" />
-
-      {/* Source link */}
-      <a
-        href={apparition.sourceUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-celestial-blue text-sm hover:text-celestial-star transition-colors"
-      >
-        View Source &rarr;
-      </a>
-    </div>
+    </>
   )
 }

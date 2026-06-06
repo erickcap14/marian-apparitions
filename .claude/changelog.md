@@ -46,6 +46,31 @@ This ensures transparency and traceability for all AI-executed workflows.
 
 ## [Unreleased]
 
+### Added (2026-06-05) — Session 5: Test framework, security audit, UX polish
+
+**Startup script**
+- `start.sh`: one-command launch — checks for node, auto-installs deps if missing, notes missing `.env`, runs `npm run dev`
+
+**T019 — Test framework** (Vitest + Testing Library)
+- Installed `vitest@4.1.8`, `@testing-library/react@16.3.2`, `@testing-library/user-event@14.6.1`, `jsdom@29.1.1`, `@vitest/coverage-v8@4.1.8`
+- `vite.config.ts`: imports `defineConfig` from `vitest/config`; `test` block with `environment: 'jsdom'`, `globals: true`, `setupFiles`
+- `src/test/setup.ts`: stubs `import.meta.env` for test environment
+- `package.json`: added `test` and `test:watch` scripts
+- `.claude/tests.md`: philosophy, tool versions, run commands, 6 key test scenarios with MapLibre + Claude API mocking conventions
+
+**T021 — Security & supply-chain audit**
+- `npm audit`: 2 moderate vulns (`esbuild`, `vite` dev-server) — both accepted (local-only app; fix requires breaking Vite 8 upgrade)
+- Secrets audit: no `.env` committed, `.gitignore` covers `.env*`, `VITE_ANTHROPIC_API_KEY` only via `import.meta.env`, no hardcoded keys found
+- Findings appended to `.claude/security.md` §7
+
+**T022 — Final UX polish**
+- `DetailPanel.tsx`: slide-in/out via `transition-transform translateX` (300ms ease-in-out); mobile backdrop overlay; `aria-label` on Close + Regenerate; gold focus rings
+- `SearchSidebar.tsx`: sr-only label + `aria-label` on search input; gold focus ring; list items keyboard-accessible (`role="button"`, `tabIndex`, `onKeyDown`, `aria-pressed`)
+- `FilterControls.tsx`: gold focus rings on century/country selects and Reset button
+- `TimelineSlider.tsx`: `aria-label="Filter by year"`; gold focus ring on range input
+- `SatelliteToggle.tsx`: gold focus rings on both toggle buttons
+- `src/index.css`: MapLibre popup fade-in animation (150ms opacity + translateY)
+
 ### Added (2026-06-05) — Session 4: Dataset expansion + all PRD features
 
 **Dataset expansion — 14 → 23 apparitions** (`marian-apparitions-5su`)
