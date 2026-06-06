@@ -46,6 +46,23 @@ This ensures transparency and traceability for all AI-executed workflows.
 
 ## [Unreleased]
 
+### Added (2026-06-06) — Session 10b: Medjugorje messages dataset — 2024–2026 expansion, newest-first order
+
+**Data: Full 2024–2026 message set** (`src/data/medjugorjeMessages.ts`)
+- Dataset: 90 → 151 messages (+61); spans 1981–2026 (46 years)
+- All 2024 monthly messages added (was only Jan + Jun, both with incorrect texts — corrected from medjugorje.ws)
+- All 2025 monthly messages added (Jan–Dec, authentic scraped texts)
+- 2026 messages added: Jan–May (latest available)
+- 3 Mirjana annual apparition messages added (Mar 18, 2024/2025/2026); Mirjana recipient count: 0 → 3
+- Pre-computed sentiments extended: 90 → 152 entries (`src/data/medjugorjeSentiments.ts`)
+
+**UI: Message list order and year range**
+- Messages sorted newest-first (2026-05-25 at top); `filteredMessages` memo now `.sort((a, b) => b.year - a.year || b.month - a.month)`
+- Year range selector and sentiment chart X-axis domain extended to 2026
+- Page subtitle updated to "1981–2026"
+
+---
+
 ### Added (2026-06-06) — Session 10: Medjugorje page — pre-computed sentiments, timeline, stats strip
 
 **Multi-agent build (3 parallel agents):**
