@@ -1,14 +1,56 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { StarField } from './components/StarField'
 import { MapView } from './map/MapView'
+import { DetailPanel } from './components/DetailPanel'
+import { SearchSidebar } from './components/SearchSidebar'
+import { FilterControls } from './components/FilterControls'
+import { TimelineSlider } from './components/TimelineSlider'
+import { SatelliteToggle } from './components/SatelliteToggle'
 import type { Apparition } from './data/types'
+import { apparitions } from './data/apparitions'
+import { getCentury } from './data/types'
+
+const MIN_YEAR = Math.min(...apparitions.map((a) => a.year))
+const MAX_YEAR = Math.max(...apparitions.map((a) => a.year))
 
 function App() {
   const [selectedApparition, setSelectedApparition] = useState<Apparition | null>(null)
+  const [century, setCentury] = useState<number | null>(null)
+  const [country, setCountry] = useState<string | null>(null)
+  const [timelineYear, setTimelineYear] = useState(MAX_YEAR)
+  const [isSatellite, setIsSatellite] = useState(false)
+  const [flyToId, setFlyToId] = useState<string | null>(null)
+
+  const handleMapSelect = useCallback((a: Apparition) => {
+    setSelectedApparition(a)
+  }, [])
+
+  const handleSidebarSelect = useCallback((a: Apparition) => {
+    setSelectedApparition(a)
+    setFlyToId(a.id)
+  }, [])
+
+  const handleReset = useCallback(() => {
+    setCentury(null)
+    setCountry(null)
+  }, [])
+
+  const visibleCount = apparitions.filter((a) => {
+    if (a.year > timelineYear) return false
+    if (century !== null && getCentury(a.year) !== century) return false
+    if (country !== null && a.country !== country) return false
+    return true
+  }).length
 
   return (
     <div className="relative h-full w-full bg-celestial-navy overflow-hidden">
       <StarField />
+
+      <SearchSidebar
+        apparitions={apparitions}
+        selectedId={selectedApparition?.id ?? null}
+        onSelect={handleSidebarSelect}
+      />
 
       {/* Header */}
       <header
@@ -23,15 +65,47 @@ function App() {
             Church-Approved Apparitions of Our Lady
           </p>
         </div>
-        <span className="badge-approved">Nihil Obstat Only</span>
+
+        <div className="flex items-center gap-3 flex-wrap justify-end">
+          <FilterControls
+            apparitions={apparitions}
+            century={century}
+            country={country}
+            onCenturyChange={setCentury}
+            onCountryChange={setCountry}
+            onReset={handleReset}
+          />
+          <SatelliteToggle
+            mode={isSatellite ? 'satellite' : 'graphic'}
+            onToggle={() => setIsSatellite((prev) => !prev)}
+          />
+          <span className="badge-approved">Nihil Obstat Only</span>
+        </div>
       </header>
 
       {/* Map */}
-      <main className="relative z-10 flex-1 h-[calc(100%-64px)]">
-        <MapView onSelect={setSelectedApparition} />
-        {/* T014 detail panel will render here */}
-        {selectedApparition && null}
+      <main className="relative z-10 h-[calc(100%-64px)]">
+        <MapView
+          onSelect={handleMapSelect}
+          flyToId={flyToId}
+          century={century}
+          country={country}
+          maxYear={timelineYear}
+          isSatellite={isSatellite}
+        />
+        <DetailPanel
+          apparition={selectedApparition}
+          onClose={() => setSelectedApparition(null)}
+        />
       </main>
+
+      <TimelineSlider
+        minYear={MIN_YEAR}
+        maxYear={MAX_YEAR}
+        value={timelineYear}
+        onChange={setTimelineYear}
+        apparitionCount={visibleCount}
+      />
     </div>
   )
 }

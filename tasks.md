@@ -40,7 +40,7 @@
 |------|------------------------------------------------------------------|--------|-------------------------------|-------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
 | T009 | Render interactive Mercator map with glowing pins (Story 1 `map_globe`) | [x] | T010,T012,T014,T016,T017 | T007,T008,T011 | src/map/MapView.tsx — MapLibre CARTO dark style, GeoJSON source, gold glow+pin layers, hover popup, click onSelect.                  |
 | T010 | Add satellite/graphic toggle (Story 6 `satellite_toggle`)        | [ ]    | —                             | T002,T003,T004,T005,T009 | Free provider default (Esri World Imagery or Mapbox) — NO Google billing. Swappable via config.satelliteProvider = esri\|mapbox\|google (prd §4). |
-| T012 | Pin hover tooltip: name + year (Story 2 `apparition_hover`)      | [ ]    | —                             | T007,T009               | Quick mini tooltip for fast scanning.                                                                                                        |
+| T012 | Pin hover tooltip: name + year (Story 2 `apparition_hover`)      | [x]    | —                             | T007,T009               | Implemented in MapView.tsx as part of T009 — dark popup on mouseenter with name + year.                                                      |
 
 ---
 
