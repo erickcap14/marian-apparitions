@@ -1,6 +1,11 @@
+import { useState } from 'react'
 import { StarField } from './components/StarField'
+import { MapView } from './map/MapView'
+import type { Apparition } from './data/types'
 
 function App() {
+  const [selectedApparition, setSelectedApparition] = useState<Apparition | null>(null)
+
   return (
     <div className="relative h-full w-full bg-celestial-navy overflow-hidden">
       <StarField />
@@ -21,13 +26,11 @@ function App() {
         <span className="badge-approved">Nihil Obstat Only</span>
       </header>
 
-      {/* Map placeholder */}
-      <main className="relative z-10 flex-1 h-[calc(100%-64px)] flex items-center justify-center">
-        <div className="text-center">
-          <p className="font-heading text-celestial-gold/60 text-sm tracking-widest uppercase">
-            Map loading in T009
-          </p>
-        </div>
+      {/* Map */}
+      <main className="relative z-10 flex-1 h-[calc(100%-64px)]">
+        <MapView onSelect={setSelectedApparition} />
+        {/* T014 detail panel will render here */}
+        {selectedApparition && null}
       </main>
     </div>
   )
