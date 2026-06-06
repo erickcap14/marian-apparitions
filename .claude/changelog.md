@@ -46,6 +46,34 @@ This ensures transparency and traceability for all AI-executed workflows.
 
 ## [Unreleased]
 
+### Added (2026-06-06) — Session 10: Medjugorje page — pre-computed sentiments, timeline, stats strip
+
+**Multi-agent build (3 parallel agents):**
+
+**Feature: Pre-computed sentiments** (`src/data/medjugorjeSentiments.ts`)
+- 90 hand-crafted `SentimentResult` entries covering all messages `msg-1981-06` through `msg-2024-06`
+- Scores range −0.35 (explicit Satan/war warnings) to 0.85 (joyful Christmas messages)
+- Labels: `joyful`, `peaceful`, `consoling`, `urgent`, `warning` applied contextually
+- Sentiment trend chart now loads instantly on mount — no API key required
+- `MedjugorjePage.tsx`: analytics state initialized via `buildAnalyticsFromSentiments()` helper at startup
+- "Showing pre-computed data" badge shown until user runs live Claude analytics
+
+**Feature: GeopoliticalTimeline component** (`src/components/GeopoliticalTimeline.tsx`)
+- Horizontal scrollable strip (min-width 1200px) spanning 1981–2024
+- 55 events plotted as colored 8px dots on a gold timeline line, positioned by year %
+- Decade markers at 1981, 1990, 2000, 2010, 2020, 2024
+- Per-event hover/focus tooltip: full title, ISO date, category badge, 2-line description
+- Category filter pills row (War/Collapse/Disaster/Papal/Terrorism/Diplomacy) with toggle-active state
+- Legend strip with live opacity feedback when categories are filtered
+- WebKit + Firefox thin scrollbar styles
+
+**Feature: MedjugorjeStats component** (`src/components/MedjugorjeStats.tsx`)
+- Compact 4-card stats strip above the sentiment chart: Total messages, Year Span, By Recipient, Top Words
+- Decade bars spanning the full grid width as a 5-bar CSS sparkline
+- All computed from `messages` prop via `useMemo` — no API calls
+
+---
+
 ### Added (2026-06-06) — Session 9: Medjugorje page — messages, analytics, geopolitical timeline
 
 **Issue:** `marian-apparitions-5mo` | **Type:** `feature` | **Status:** `closed`

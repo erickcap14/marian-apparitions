@@ -21,11 +21,14 @@ import type {
 } from '../data/medjugorjeTypes'
 import { medjugorjeMessages } from '../data/medjugorjeMessages'
 import { geopoliticalEvents } from '../data/geopoliticalEvents'
+import { precomputedSentiments } from '../data/medjugorjeSentiments'
 import {
   analyzeSentiments,
   enrichTimeWindow,
   computeKeywordFrequency,
 } from '../api/medjugorjeAnalytics'
+import { GeopoliticalTimeline } from '../components/GeopoliticalTimeline'
+import { MedjugorjeStats } from '../components/MedjugorjeStats'
 
 const EVENT_CATEGORY_COLORS: Record<GeopoliticalEvent['category'], string> = {
   war:       '#ef4444',
@@ -154,13 +157,44 @@ function MessageCard({ message, isExpanded, onToggle }: MessageCardProps) {
 }
 
 // ---------------------------------------------------------------------------
+// Helper — build AnalyticsResult from a SentimentResult array (no API needed)
+// ---------------------------------------------------------------------------
+
+function buildAnalyticsFromSentiments(sentiments: SentimentResult[]): AnalyticsResult {
+  const allKeywords = sentiments.flatMap((s) => s.keywords)
+  const kwFreq: Record<string, number> = {}
+  allKeywords.forEach((w) => { kwFreq[w] = (kwFreq[w] ?? 0) + 1 })
+  const topKeywords = Object.entries(kwFreq)
+    .map(([word, count]) => ({ word, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 20)
+  const themeMap: Record<string, string[]> = {}
+  sentiments.forEach((s) => {
+    s.themes.forEach((t) => {
+      themeMap[t] = themeMap[t] ?? []
+      themeMap[t].push(s.messageId)
+    })
+  })
+  const themes: ThemeCluster[] = Object.entries(themeMap).map(([name, messageIds], idx) => ({
+    name,
+    messageIds,
+    description: `Messages themed around ${name}`,
+    color: THEME_PALETTE[idx % THEME_PALETTE.length],
+  }))
+  return { sentiments, topKeywords, themes, summary: '' }
+}
+
+// ---------------------------------------------------------------------------
 // Main page
 // ---------------------------------------------------------------------------
 
 export function MedjugorjePage() {
   const hasApiKey = Boolean(import.meta.env.VITE_ANTHROPIC_API_KEY)
 
-  const [analytics, setAnalytics] = useState<AnalyticsResult | null>(null)
+  const [analytics, setAnalytics] = useState<AnalyticsResult>(() =>
+    buildAnalyticsFromSentiments(precomputedSentiments),
+  )
+  const [isPrecomputed, setIsPrecomputed] = useState(true)
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false)
   const [analyticsError, setAnalyticsError] = useState<string | null>(null)
 
@@ -192,7 +226,6 @@ export function MedjugorjePage() {
   // ---------------------------------------------------------------------------
 
   const sentimentByYear = useMemo<{ year: number; score: number }[]>(() => {
-    if (!analytics) return []
     const byYear: Record<number, number[]> = {}
     analytics.sentiments.forEach((s: SentimentResult) => {
       const msg = medjugorjeMessages.find((m) => m.id === s.messageId)
@@ -274,6 +307,7 @@ export function MedjugorjePage() {
       }))
 
       setAnalytics({ sentiments, topKeywords, themes, summary: '' })
+      setIsPrecomputed(false)
     } catch (err) {
       setAnalyticsError(err instanceof Error ? err.message : 'Analytics failed')
     } finally {
@@ -311,8 +345,9 @@ export function MedjugorjePage() {
   // ---------------------------------------------------------------------------
 
   function renderAnalyticsButton() {
-    const label = analytics ? 'Re-run Analytics' : 'Run Claude Analytics'
+    const label = isPrecomputed ? 'Run Claude Analytics' : 'Re-run Analytics'
     return (
+      <div className="flex flex-col items-end gap-1.5">
       <button
         onClick={handleRunAnalytics}
         disabled={!hasApiKey || isLoadingAnalytics}
@@ -334,6 +369,12 @@ export function MedjugorjePage() {
           </>
         )}
       </button>
+      {isPrecomputed && (
+        <span className="font-body text-xs text-celestial-star-dim">
+          Showing pre-computed data
+        </span>
+      )}
+      </div>
     )
   }
 
@@ -366,9 +407,9 @@ export function MedjugorjePage() {
 
           {!hasApiKey && (
             <div className="mt-4 px-4 py-3 border border-celestial-gold/30 bg-celestial-gold/5 rounded-sm font-body text-xs text-celestial-star-dim leading-relaxed">
-              Set <code className="text-celestial-gold">VITE_ANTHROPIC_API_KEY</code> in{' '}
-              <code className="text-celestial-gold">.env</code> to enable Claude analytics.
-              Keyword frequency is available without an API key.
+              Charts use pre-computed data and load instantly. Set{' '}
+              <code className="text-celestial-gold">VITE_ANTHROPIC_API_KEY</code> in{' '}
+              <code className="text-celestial-gold">.env</code> to run live Claude analytics and AI window analysis.
             </div>
           )}
 
@@ -378,6 +419,11 @@ export function MedjugorjePage() {
         </section>
 
         {/* ------------------------------------------------------------------ */}
+        {/* Stats overview                                                      */}
+        {/* ------------------------------------------------------------------ */}
+        <MedjugorjeStats messages={medjugorjeMessages} />
+
+        {/* ------------------------------------------------------------------ */}
         {/* Sentiment trend chart                                               */}
         {/* ------------------------------------------------------------------ */}
         <section>
@@ -385,7 +431,7 @@ export function MedjugorjePage() {
             Sentiment Trend
           </h3>
 
-          {analytics && sentimentByYear.length > 0 ? (
+          {sentimentByYear.length > 0 ? (
             <div className="border border-celestial-gold/10 rounded-sm bg-celestial-indigo/30 p-4">
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={sentimentByYear} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
@@ -455,12 +501,20 @@ export function MedjugorjePage() {
           ) : (
             <div className="border border-celestial-gold/10 rounded-sm bg-celestial-indigo/20 p-8 text-center">
               <p className="font-body text-celestial-star-dim text-sm">
-                {isLoadingAnalytics
-                  ? 'Running sentiment analysis…'
-                  : 'Run Claude Analytics to see the sentiment trend chart.'}
+                {isLoadingAnalytics ? 'Running sentiment analysis…' : 'No sentiment data available.'}
               </p>
             </div>
           )}
+        </section>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* Geopolitical timeline                                               */}
+        {/* ------------------------------------------------------------------ */}
+        <section>
+          <h3 className="font-heading text-celestial-star text-sm tracking-widest uppercase mb-4">
+            World Events Timeline
+          </h3>
+          <GeopoliticalTimeline events={geopoliticalEvents} />
         </section>
 
         {/* ------------------------------------------------------------------ */}
@@ -520,7 +574,7 @@ export function MedjugorjePage() {
         {/* ------------------------------------------------------------------ */}
         {/* Theme clusters                                                      */}
         {/* ------------------------------------------------------------------ */}
-        {analytics && analytics.themes.length > 0 && (
+        {analytics.themes.length > 0 && (
           <section>
             <h3 className="font-heading text-celestial-star text-sm tracking-widest uppercase mb-4">
               Theme Clusters
