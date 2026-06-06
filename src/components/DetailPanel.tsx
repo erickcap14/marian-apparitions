@@ -47,7 +47,6 @@ export function DetailPanel({ apparition, onClose }: DetailPanelProps) {
       {/* Detail panel */}
       <div
         className={[
-          'panel-celestial',
           'fixed right-0 top-[64px]',
           'w-full max-w-full sm:w-96',
           'h-[calc(100vh-64px)]',
@@ -56,6 +55,10 @@ export function DetailPanel({ apparition, onClose }: DetailPanelProps) {
           'flex flex-col',
           'p-6',
           'transition-transform duration-300 ease-in-out',
+          'border border-celestial-gold/20 shadow-panel',
+          isOpen
+            ? 'bg-celestial-indigo/95 backdrop-blur-sm'
+            : 'bg-celestial-indigo/95 pointer-events-none',
         ].join(' ')}
         style={{ transform: isOpen ? 'translateX(0)' : 'translateX(100%)' }}
         role="region"

@@ -46,6 +46,14 @@ This ensures transparency and traceability for all AI-executed workflows.
 
 ## [Unreleased]
 
+### Fixed (2026-06-06) — Session 6: Map pin rendering fix + startup script
+
+**Map pin rendering bug** (`src/map/MapView.tsx`)
+- Root cause: React StrictMode double-invokes the `isSatellite` useEffect on mount, calling `map.setStyle(GRAPHIC_STYLE)` before the map's rendering pipeline is initialized. This caused `style.load` to fire prematurely — layers were added to the style object but the WebGL renderer wasn't ready, so circles never appeared.
+- Fix part 1: Guard `isSatellite` effect with `prevIsSatelliteRef` — only calls `setStyle` when the value genuinely changes (not on mount or StrictMode re-invocations). Eliminates the MapLibre "Unable to perform style diff" warning entirely.
+- Fix part 2: `style.load` now always calls `addLayers` (it only fires for legitimate style loads: initial load or satellite toggle). Both graphic and satellite modes confirmed working.
+- Also: `DetailPanel` backdrop-blur-sm is now only applied when panel is open (prevents GPU compositing layer from forming when panel is off-screen).
+
 ### Added (2026-06-05) — Session 5: Test framework, security audit, UX polish
 
 **Startup script**

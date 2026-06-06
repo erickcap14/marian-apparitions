@@ -147,7 +147,9 @@ export function MapView({ onSelect, flyToId, century, country, maxYear, isSatell
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right')
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
 
-    // Re-add layers on every style change (initial load + setStyle calls)
+    // Add layers on every genuine style load (initial + satellite toggle).
+    // The isSatellite effect is now guarded to never call setStyle on mount,
+    // so every style.load here is a legitimate event.
     map.on('style.load', () => {
       addLayers(map, filteredRef.current)
     })
@@ -199,7 +201,16 @@ export function MapView({ onSelect, flyToId, century, country, maxYear, isSatell
   }, [onSelect])
 
   // ── Satellite / graphic style switch ──────────────────────────────────────
+  // prevIsSatellite persists across StrictMode remounts, so we only call setStyle
+  // when the value genuinely changes (not on mount or StrictMode re-invocation).
+  const prevIsSatelliteRef = useRef<boolean | null>(null)
   useEffect(() => {
+    if (prevIsSatelliteRef.current === null) {
+      prevIsSatelliteRef.current = isSatellite
+      return
+    }
+    if (prevIsSatelliteRef.current === isSatellite) return
+    prevIsSatelliteRef.current = isSatellite
     if (!mapRef.current) return
     mapRef.current.setStyle(isSatellite ? SATELLITE_STYLE : GRAPHIC_STYLE)
   }, [isSatellite])
