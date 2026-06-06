@@ -1,13 +1,16 @@
 import { useMemo } from 'react'
 import type { Apparition } from '../data/types'
 import { getCentury } from '../data/types'
+import { STATUS_LABELS } from '../constants'
 
 interface FilterControlsProps {
   apparitions: Apparition[]
   century: number | null
   country: string | null
+  status: string | null
   onCenturyChange: (century: number | null) => void
   onCountryChange: (country: string | null) => void
+  onStatusChange: (status: string | null) => void
   onReset: () => void
 }
 
@@ -50,12 +53,22 @@ const RESET_CLASS = [
   'focus:outline-none focus:ring-2 focus:ring-yellow-400/50',
 ].join(' ')
 
+const STATUS_ORDER = [
+  'approved',
+  'approved_for_devotion',
+  'under_investigation',
+  'not_approved',
+  'unapproved',
+] as const
+
 export function FilterControls({
   apparitions,
   century,
   country,
+  status,
   onCenturyChange,
   onCountryChange,
+  onStatusChange,
   onReset,
 }: FilterControlsProps) {
   const centuries = useMemo(() => {
@@ -70,7 +83,7 @@ export function FilterControls({
     )
   }, [apparitions])
 
-  const hasFilter = century !== null || country !== null
+  const hasFilter = century !== null || country !== null || status !== null
 
   function handleCenturyChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const val = e.target.value
@@ -80,6 +93,11 @@ export function FilterControls({
   function handleCountryChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const val = e.target.value
     onCountryChange(val === '' ? null : val)
+  }
+
+  function handleStatusChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const val = e.target.value
+    onStatusChange(val === '' ? null : val)
   }
 
   return (
@@ -116,6 +134,24 @@ export function FilterControls({
         {countries.map(c => (
           <option key={c} value={c}>
             {c}
+          </option>
+        ))}
+      </select>
+
+      {/* Status select */}
+      <label className="sr-only" htmlFor="filter-status">
+        Status
+      </label>
+      <select
+        id="filter-status"
+        className={SELECT_CLASS}
+        value={status ?? ''}
+        onChange={handleStatusChange}
+      >
+        <option value="">All Statuses</option>
+        {STATUS_ORDER.map(s => (
+          <option key={s} value={s}>
+            {STATUS_LABELS[s]}
           </option>
         ))}
       </select>

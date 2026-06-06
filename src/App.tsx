@@ -4,6 +4,7 @@ import { MapView } from './map/MapView'
 import { DetailPanel } from './components/DetailPanel'
 import { SearchSidebar } from './components/SearchSidebar'
 import { FilterControls } from './components/FilterControls'
+import { MapLegend } from './components/MapLegend'
 import { TimelineSlider } from './components/TimelineSlider'
 import { SatelliteToggle } from './components/SatelliteToggle'
 import { TodayFeastBanner, getTodayFeastMatches } from './components/TodayFeastBanner'
@@ -19,6 +20,7 @@ function App() {
   const [selectedApparition, setSelectedApparition] = useState<Apparition | null>(null)
   const [century, setCentury] = useState<number | null>(null)
   const [country, setCountry] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<string | null>(null)
   const [timelineYear, setTimelineYear] = useState(MAX_YEAR)
   const [isSatellite, setIsSatellite] = useState(false)
   const [flyToId, setFlyToId] = useState<string | null>(null)
@@ -39,12 +41,14 @@ function App() {
   const handleReset = useCallback(() => {
     setCentury(null)
     setCountry(null)
+    setStatusFilter(null)
   }, [])
 
   const visibleCount = apparitions.filter((a) => {
     if (a.year > timelineYear) return false
     if (century !== null && getCentury(a.year) !== century) return false
     if (country !== null && a.country !== country) return false
+    if (statusFilter !== null && a.status !== statusFilter) return false
     return true
   }).length
 
@@ -81,8 +85,10 @@ function App() {
             apparitions={apparitions}
             century={century}
             country={country}
+            status={statusFilter}
             onCenturyChange={setCentury}
             onCountryChange={setCountry}
+            onStatusChange={setStatusFilter}
             onReset={handleReset}
           />
           <SatelliteToggle
@@ -121,11 +127,13 @@ function App() {
               country={country}
               maxYear={timelineYear}
               isSatellite={isSatellite}
+              statusFilter={statusFilter}
             />
             <DetailPanel
               apparition={selectedApparition}
               onClose={() => setSelectedApparition(null)}
             />
+            <MapLegend />
           </main>
 
           <TimelineSlider

@@ -4,7 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { apparitions } from '../data/apparitions'
 import type { Apparition } from '../data/types'
 import { getCentury } from '../data/types'
-import { MAP_INITIAL_CENTER, MAP_INITIAL_ZOOM, PIN_COLOR_GOLD, PIN_COLOR_HOVER } from '../constants'
+import { MAP_INITIAL_CENTER, MAP_INITIAL_ZOOM, PIN_COLORS } from '../constants'
 import { config } from '../config'
 
 interface MapViewProps {
@@ -14,6 +14,7 @@ interface MapViewProps {
   country: string | null
   maxYear: number
   isSatellite: boolean
+  statusFilter: string | null
 }
 
 const GRAPHIC_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
@@ -51,15 +52,26 @@ const SOURCE_ID = 'apparitions-source'
 const GLOW_LAYER_ID = 'apparition-glow'
 const PINS_LAYER_ID = 'apparition-pins'
 
+// Data-driven color match expression for pins
+const COLOR_MATCH_EXPR: maplibregl.ExpressionSpecification = [
+  'match', ['get', 'status'],
+  'approved',              PIN_COLORS.approved,
+  'approved_for_devotion', PIN_COLORS.approved_for_devotion,
+  'under_investigation',   PIN_COLORS.under_investigation,
+  'not_approved',          PIN_COLORS.not_approved,
+  'unapproved',            PIN_COLORS.unapproved,
+  PIN_COLORS.approved, // fallback
+]
+
 function buildGeojson(
   list: Apparition[],
-): GeoJSON.FeatureCollection<GeoJSON.Point, { id: string }> {
+): GeoJSON.FeatureCollection<GeoJSON.Point, { id: string; status: string }> {
   return {
     type: 'FeatureCollection',
     features: list.map((a) => ({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [a.lng, a.lat] },
-      properties: { id: a.id },
+      properties: { id: a.id, status: a.status },
     })),
   }
 }
@@ -79,7 +91,7 @@ function addLayers(map: maplibregl.Map, list: Apparition[]) {
     source: SOURCE_ID,
     paint: {
       'circle-radius': 18,
-      'circle-color': PIN_COLOR_GOLD,
+      'circle-color': COLOR_MATCH_EXPR,
       'circle-opacity': 0.3,
       'circle-blur': 1,
     },
@@ -91,7 +103,7 @@ function addLayers(map: maplibregl.Map, list: Apparition[]) {
     source: SOURCE_ID,
     paint: {
       'circle-radius': 7,
-      'circle-color': PIN_COLOR_GOLD,
+      'circle-color': COLOR_MATCH_EXPR,
       'circle-stroke-color': '#ffffff',
       'circle-stroke-width': 1.5,
       'circle-stroke-opacity': 0.8,
@@ -100,7 +112,7 @@ function addLayers(map: maplibregl.Map, list: Apparition[]) {
   })
 }
 
-export function MapView({ onSelect, flyToId, century, country, maxYear, isSatellite }: MapViewProps) {
+export function MapView({ onSelect, flyToId, century, country, maxYear, isSatellite, statusFilter }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const popupRef = useRef<maplibregl.Popup | null>(null)
@@ -112,9 +124,10 @@ export function MapView({ onSelect, flyToId, century, country, maxYear, isSatell
         if (a.year > maxYear) return false
         if (century !== null && getCentury(a.year) !== century) return false
         if (country !== null && a.country !== country) return false
+        if (statusFilter !== null && a.status !== statusFilter) return false
         return true
       }),
-    [maxYear, century, country],
+    [maxYear, century, country, statusFilter],
   )
 
   // Keep a ref so the style.load closure always sees the latest filtered list
@@ -154,7 +167,7 @@ export function MapView({ onSelect, flyToId, century, country, maxYear, isSatell
       addLayers(map, filteredRef.current)
     })
 
-    // Hover: popup + highlight
+    // Hover: popup + radius highlight (color preserved via data-driven expression)
     map.on('mouseenter', PINS_LAYER_ID, (e) => {
       map.getCanvas().style.cursor = 'pointer'
       const feature = e.features?.[0]
@@ -166,11 +179,9 @@ export function MapView({ onSelect, flyToId, century, country, maxYear, isSatell
       const apparition = apparitions.find((a) => a.id === id)
       if (!apparition) return
 
-      map.setPaintProperty(PINS_LAYER_ID, 'circle-color', [
-        'case', ['==', ['get', 'id'], id], PIN_COLOR_HOVER, PIN_COLOR_GOLD,
-      ])
-      map.setPaintProperty(GLOW_LAYER_ID, 'circle-color', [
-        'case', ['==', ['get', 'id'], id], PIN_COLOR_HOVER, PIN_COLOR_GOLD,
+      // Increase radius for hovered pin; preserve status-based colors
+      map.setPaintProperty(PINS_LAYER_ID, 'circle-radius', [
+        'case', ['==', ['get', 'id'], id], 10, 7,
       ])
 
       popup.setLngLat(coords).setHTML(`<strong>${apparition.name}</strong><br>${apparition.year}`).addTo(map)
@@ -179,8 +190,7 @@ export function MapView({ onSelect, flyToId, century, country, maxYear, isSatell
     map.on('mouseleave', PINS_LAYER_ID, () => {
       map.getCanvas().style.cursor = ''
       hoveredIdRef.current = null
-      map.setPaintProperty(PINS_LAYER_ID, 'circle-color', PIN_COLOR_GOLD)
-      map.setPaintProperty(GLOW_LAYER_ID, 'circle-color', PIN_COLOR_GOLD)
+      map.setPaintProperty(PINS_LAYER_ID, 'circle-radius', 7)
       popup.remove()
     })
 
