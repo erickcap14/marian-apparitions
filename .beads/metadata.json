@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "marian_apparitions",
+  "project_id": "7903e0fd-8108-4872-8589-c05789aaca83"
+}
