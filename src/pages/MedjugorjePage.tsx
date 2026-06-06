@@ -54,11 +54,13 @@ const PAGE_SIZE = 50
 const INPUT_PRICE_PER_TOKEN  = 3.00  / 1_000_000
 const OUTPUT_PRICE_PER_TOKEN = 15.00 / 1_000_000
 
-const USAGE_KEY  = 'medjugorje-api-usage'
-const BUDGET_KEY = 'medjugorje-budget'
+const USAGE_KEY      = 'medjugorje-api-usage'
+const BUDGET_KEY     = 'medjugorje-budget'
+const ENRICHMENT_KEY = 'medjugorje-enrichments'
+const SENTIMENTS_KEY = 'medjugorje-live-sentiments'
 
 // ---------------------------------------------------------------------------
-// Usage persistence helpers
+// Persistence helpers
 // ---------------------------------------------------------------------------
 
 interface UsageRecord {
@@ -88,6 +90,32 @@ function loadBudget(): number {
     }
   } catch { /* ignore */ }
   return 5.00
+}
+
+// Enrichments: map of "YYYY–YYYY" window label → narrative text
+function loadEnrichments(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(ENRICHMENT_KEY)
+    if (raw) return JSON.parse(raw) as Record<string, string>
+  } catch { /* ignore */ }
+  return {}
+}
+
+function saveEnrichments(map: Record<string, string>): void {
+  localStorage.setItem(ENRICHMENT_KEY, JSON.stringify(map))
+}
+
+// Live analytics sentiments from the last "Run Claude Analytics" run
+function loadPersistedSentiments(): SentimentResult[] | null {
+  try {
+    const raw = localStorage.getItem(SENTIMENTS_KEY)
+    if (raw) return JSON.parse(raw) as SentimentResult[]
+  } catch { /* ignore */ }
+  return null
+}
+
+function saveSentiments(sentiments: SentimentResult[]): void {
+  localStorage.setItem(SENTIMENTS_KEY, JSON.stringify(sentiments))
 }
 
 // ---------------------------------------------------------------------------
@@ -135,6 +163,18 @@ function KeywordTooltipContent({ active, payload }: KeywordTooltipProps) {
   )
 }
 
+// Hover tooltip wrapper for action buttons
+function ButtonTooltip({ children, tip }: { children: React.ReactNode; tip: string }) {
+  return (
+    <div className="relative group inline-block">
+      {children}
+      <div className="absolute right-0 top-full mt-1.5 w-64 p-2.5 bg-celestial-indigo border border-celestial-gold/25 rounded-sm font-body text-xs text-celestial-star-dim leading-relaxed invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50 pointer-events-none">
+        {tip}
+      </div>
+    </div>
+  )
+}
+
 interface MessageCardProps {
   message: MedjugorjeMessage
   isExpanded: boolean
@@ -151,9 +191,7 @@ function MessageCard({ message, isExpanded, onToggle }: MessageCardProps) {
   const preview = message.text.length > 120 ? message.text.slice(0, 120) + '…' : message.text
 
   return (
-    <div
-      className="border border-celestial-gold/10 rounded-sm bg-celestial-indigo/30 hover:bg-celestial-indigo/50 transition-colors"
-    >
+    <div className="border border-celestial-gold/10 rounded-sm bg-celestial-indigo/30 hover:bg-celestial-indigo/50 transition-colors">
       <button
         className="w-full text-left p-4 flex items-start gap-3 focus:outline-none focus:ring-1 focus:ring-celestial-gold/40 rounded-sm"
         onClick={onToggle}
@@ -235,10 +273,12 @@ function buildAnalyticsFromSentiments(sentiments: SentimentResult[]): AnalyticsR
 export function MedjugorjePage() {
   const hasApiKey = Boolean(import.meta.env.VITE_ANTHROPIC_API_KEY)
 
-  const [analytics, setAnalytics] = useState<AnalyticsResult>(() =>
-    buildAnalyticsFromSentiments(precomputedSentiments),
-  )
-  const [isPrecomputed, setIsPrecomputed] = useState(true)
+  // Use persisted live sentiments if available, otherwise fall back to precomputed
+  const [analytics, setAnalytics] = useState<AnalyticsResult>(() => {
+    const persisted = loadPersistedSentiments()
+    return buildAnalyticsFromSentiments(persisted ?? precomputedSentiments)
+  })
+  const [isPrecomputed, setIsPrecomputed] = useState(() => !loadPersistedSentiments())
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false)
   const [analyticsError, setAnalyticsError] = useState<string | null>(null)
 
@@ -248,7 +288,8 @@ export function MedjugorjePage() {
   const [yearRange, setYearRange] = useState<[number, number]>([1981, 2026])
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
-  const [enrichment, setEnrichment] = useState<string | null>(null)
+  // Enrichments: persisted map of windowLabel → narrative text
+  const [enrichments, setEnrichments] = useState<Record<string, string>>(loadEnrichments)
   const [isLoadingEnrichment, setIsLoadingEnrichment] = useState(false)
   const [enrichmentError, setEnrichmentError] = useState<string | null>(null)
 
@@ -258,6 +299,10 @@ export function MedjugorjePage() {
   const [budget, setBudget] = useState<number>(loadBudget)
 
   const enrichmentRef = useRef<HTMLDivElement>(null)
+
+  // Derived: current window label and its stored enrichment
+  const windowLabel = `${yearRange[0]}–${yearRange[1]}`
+  const currentEnrichment = enrichments[windowLabel] ?? null
 
   // Compute keyword frequency locally on mount — no API key needed
   useEffect(() => {
@@ -379,6 +424,7 @@ export function MedjugorjePage() {
 
       setAnalytics({ sentiments, topKeywords, themes, summary: '' })
       setIsPrecomputed(false)
+      saveSentiments(sentiments)
       accumulateUsage(usage)
     } catch (err) {
       setAnalyticsError(err instanceof Error ? err.message : 'Analytics failed')
@@ -391,11 +437,11 @@ export function MedjugorjePage() {
     if (!hasApiKey || isLoadingEnrichment) return
     setIsLoadingEnrichment(true)
     setEnrichmentError(null)
-    setEnrichment(null)
     try {
-      const windowLabel = `${yearRange[0]}–${yearRange[1]}`
       const { text, usage } = await enrichTimeWindow(filteredMessages, filteredEvents, windowLabel)
-      setEnrichment(text)
+      const updated = { ...enrichments, [windowLabel]: text }
+      setEnrichments(updated)
+      saveEnrichments(updated)
       accumulateUsage(usage)
       setTimeout(() => enrichmentRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
     } catch (err) {
@@ -436,32 +482,40 @@ export function MedjugorjePage() {
 
   function renderAnalyticsButton() {
     const label = isPrecomputed ? 'Run Claude Analytics' : 'Re-run Analytics'
+    const tip = 'Sends all 151 messages to Claude for live sentiment scoring, keyword extraction, and theme clustering. Results are saved and restored on your next visit. Estimated cost: $0.10–$0.20 per run.'
     return (
       <div className="flex flex-col items-end gap-1.5">
-        <button
-          onClick={handleRunAnalytics}
-          disabled={!hasApiKey || isLoadingAnalytics}
-          title={hasApiKey ? undefined : 'Set VITE_ANTHROPIC_API_KEY to enable'}
-          className="inline-flex items-center gap-2 px-4 py-2 border border-celestial-gold/60 text-celestial-gold bg-transparent hover:bg-celestial-gold/10 font-body text-sm rounded-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-celestial-gold"
-        >
-          {isLoadingAnalytics ? (
-            <>
-              <span
-                className="inline-block w-4 h-4 border-2 border-celestial-gold border-t-transparent rounded-full animate-spin"
-                aria-hidden="true"
-              />
-              Analyzing…
-            </>
-          ) : (
-            <>
-              <span aria-hidden="true">✦</span>
-              {label}
-            </>
-          )}
-        </button>
+        <ButtonTooltip tip={tip}>
+          <button
+            onClick={handleRunAnalytics}
+            disabled={!hasApiKey || isLoadingAnalytics}
+            title={hasApiKey ? undefined : 'Set VITE_ANTHROPIC_API_KEY to enable'}
+            className="inline-flex items-center gap-2 px-4 py-2 border border-celestial-gold/60 text-celestial-gold bg-transparent hover:bg-celestial-gold/10 font-body text-sm rounded-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-celestial-gold"
+          >
+            {isLoadingAnalytics ? (
+              <>
+                <span
+                  className="inline-block w-4 h-4 border-2 border-celestial-gold border-t-transparent rounded-full animate-spin"
+                  aria-hidden="true"
+                />
+                Analyzing…
+              </>
+            ) : (
+              <>
+                <span aria-hidden="true">✦</span>
+                {label}
+              </>
+            )}
+          </button>
+        </ButtonTooltip>
         {isPrecomputed && (
           <span className="font-body text-xs text-celestial-star-dim">
             Showing pre-computed data
+          </span>
+        )}
+        {!isPrecomputed && (
+          <span className="font-body text-xs text-emerald-400/80">
+            Live analytics active
           </span>
         )}
       </div>
@@ -525,10 +579,10 @@ export function MedjugorjePage() {
   const yearOptions: number[] = []
   for (let y = 1981; y <= 2026; y++) yearOptions.push(y)
 
-  const RECIPIENT_STYLE: Record<MedjugorjeMessage['recipient'], { active: string; base: string; dot: string }> = {
-    marija:  { active: 'border-celestial-gold bg-celestial-gold text-celestial-navy',  base: 'border-celestial-gold/40 text-celestial-gold bg-celestial-gold/10',    dot: 'bg-celestial-gold' },
-    mirjana: { active: 'border-celestial-blue bg-celestial-blue text-celestial-navy',  base: 'border-celestial-blue/40 text-celestial-blue bg-celestial-blue/10',    dot: 'bg-celestial-blue' },
-    group:   { active: 'border-purple-400 bg-purple-400 text-celestial-navy',          base: 'border-purple-400/40 text-purple-300 bg-purple-400/10',                  dot: 'bg-purple-400' },
+  const RECIPIENT_STYLE: Record<MedjugorjeMessage['recipient'], { active: string; base: string }> = {
+    marija:  { active: 'border-celestial-gold bg-celestial-gold text-celestial-navy',  base: 'border-celestial-gold/40 text-celestial-gold bg-celestial-gold/10' },
+    mirjana: { active: 'border-celestial-blue bg-celestial-blue text-celestial-navy',  base: 'border-celestial-blue/40 text-celestial-blue bg-celestial-blue/10' },
+    group:   { active: 'border-purple-400 bg-purple-400 text-celestial-navy',          base: 'border-purple-400/40 text-purple-300 bg-purple-400/10' },
   }
 
   // ---------------------------------------------------------------------------
@@ -586,40 +640,48 @@ export function MedjugorjePage() {
                   AI Window Analysis
                 </h3>
                 <p className="font-body text-celestial-star-dim text-xs mt-1">
-                  Claude will narrate correlations between messages and world events for{' '}
-                  <span className="text-celestial-star">{yearRange[0]}–{yearRange[1]}</span>
+                  {currentEnrichment
+                    ? <>Saved analysis for <span className="text-celestial-star">{windowLabel}</span> — click to refresh</>
+                    : <>Claude will narrate correlations between messages and world events for{' '}<span className="text-celestial-star">{windowLabel}</span></>
+                  }
                 </p>
               </div>
-              <button
-                onClick={handleEnrichWindow}
-                disabled={!hasApiKey || isLoadingEnrichment}
-                title={hasApiKey ? undefined : 'Set VITE_ANTHROPIC_API_KEY to enable'}
-                className="inline-flex items-center gap-2 px-4 py-2 border border-celestial-gold/60 text-celestial-gold bg-transparent hover:bg-celestial-gold/10 font-body text-sm rounded-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-celestial-gold whitespace-nowrap"
-              >
-                {isLoadingEnrichment ? (
-                  <>
-                    <span
-                      className="inline-block w-4 h-4 border-2 border-celestial-gold border-t-transparent rounded-full animate-spin"
-                      aria-hidden="true"
-                    />
-                    Analyzing…
-                  </>
-                ) : (
-                  <>
-                    <span aria-hidden="true">✦</span>
-                    Analyze Window with AI
-                  </>
-                )}
-              </button>
+              <ButtonTooltip tip="Claude reads the messages and world events in the selected year range and writes a 3–5 paragraph narrative on correlations and theological themes. Results are saved per time window and restored automatically. Estimated cost: ~$0.01 per run.">
+                <button
+                  onClick={handleEnrichWindow}
+                  disabled={!hasApiKey || isLoadingEnrichment}
+                  title={hasApiKey ? undefined : 'Set VITE_ANTHROPIC_API_KEY to enable'}
+                  className="inline-flex items-center gap-2 px-4 py-2 border border-celestial-gold/60 text-celestial-gold bg-transparent hover:bg-celestial-gold/10 font-body text-sm rounded-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-celestial-gold whitespace-nowrap"
+                >
+                  {isLoadingEnrichment ? (
+                    <>
+                      <span
+                        className="inline-block w-4 h-4 border-2 border-celestial-gold border-t-transparent rounded-full animate-spin"
+                        aria-hidden="true"
+                      />
+                      Analyzing…
+                    </>
+                  ) : (
+                    <>
+                      <span aria-hidden="true">✦</span>
+                      {currentEnrichment ? 'Re-analyze Window' : 'Analyze Window with AI'}
+                    </>
+                  )}
+                </button>
+              </ButtonTooltip>
             </div>
 
             {enrichmentError && (
               <p className="font-body text-xs text-red-400 mb-3">{enrichmentError}</p>
             )}
 
-            {enrichment ? (
+            {isLoadingEnrichment && (
+              <p className="font-body text-celestial-star-dim text-xs">Generating analysis…</p>
+            )}
+
+            {currentEnrichment && !isLoadingEnrichment ? (
               <div className="border-t border-celestial-gold/10 pt-4">
-                {enrichment.split('\n\n').map((para, idx) => (
+                {currentEnrichment.split('\n\n').map((para, idx) => (
                   <p
                     key={idx}
                     className="font-body text-celestial-star text-sm leading-relaxed mb-3 last:mb-0"
@@ -628,7 +690,7 @@ export function MedjugorjePage() {
                   </p>
                 ))}
               </div>
-            ) : !isLoadingEnrichment ? (
+            ) : !isLoadingEnrichment && !currentEnrichment ? (
               <p className="font-body text-celestial-star-dim text-xs">
                 Click the button above to generate a narrative analysis of the selected time window.
               </p>
@@ -735,7 +797,7 @@ export function MedjugorjePage() {
         </section>
 
         {/* ------------------------------------------------------------------ */}
-        {/* Top 10 keyword frequency bar chart                                  */}
+        {/* Keyword frequency bar chart                                         */}
         {/* ------------------------------------------------------------------ */}
         <section>
           <h3 className="font-heading text-celestial-star text-sm tracking-widest uppercase mb-4">
