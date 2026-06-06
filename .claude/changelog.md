@@ -46,6 +46,32 @@ This ensures transparency and traceability for all AI-executed workflows.
 
 ## [Unreleased]
 
+### Added (2026-06-06) — Session 8: Miracle Hunter expansion, multi-status color coding
+
+**Feature: Miracle Hunter non-approved apparitions database expansion** (`marian-apparitions-1pa`)
+- Database: 26 → 72 apparitions across 24 countries and 17 centuries
+- 46 new sites added from Miracle Hunter's unapproved/non-approved listings, sourced via automated browser research
+- New regions now covered: South Korea, Nigeria, South Africa, India, Bolivia, Slovakia, Ukraine, Australia, Ecuador
+- Historical range extended: Good Success (1594, Ecuador), Querrien (1652, France), Montagnaga (1729, Italy)
+- `types.ts`: added `'unapproved'` to the Zod status enum (5 values total)
+
+**Feature: 5-status color-coded map pins**
+- `constants.ts`: `PIN_COLORS`, `PIN_GLOW_COLORS`, `STATUS_LABELS` records for all 5 statuses
+  - Gold → Approved | Sky blue → Approved for Devotion | Amber → Under Investigation | Rose → Not Approved | Violet → Not Formally Evaluated
+- `MapView.tsx`: data-driven MapLibre GL `match` expression colors pins and glow layers by status
+- Hover now enlarges pin radius (7→10px) rather than overriding status color
+
+**Feature: Map legend** (`MapLegend.tsx` — new component)
+- Compact translucent panel anchored bottom-left of the map
+- Displays all 5 statuses with colored dots and human-readable labels
+
+**Feature: Status filter dropdown**
+- `FilterControls.tsx`: new "All Statuses" select with all 5 options
+- `App.tsx`: `statusFilter` state threaded to `MapView`, `FilterControls`, and `visibleCount`
+- Reset button now clears status filter in addition to century and country
+
+---
+
 ### Added / Fixed (2026-06-06) — Session 7: Sidebar sync, feast day banner, Medjugorje foundation
 
 **QA pass** — Full browser-driven QA via Playwright. Confirmed: map load, sidebar fly-to, detail panel, satellite toggle, search filter, century filter, timeline slider. Found and fixed one bug (sidebar sync).
