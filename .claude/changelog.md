@@ -46,6 +46,45 @@ This ensures transparency and traceability for all AI-executed workflows.
 
 ## [Unreleased]
 
+### Added (2026-06-06) — Session 11: Medjugorje page — analytics UX, persistence, cost tracking
+
+**Feature: API cost tracker** (`src/pages/MedjugorjePage.tsx`)
+- Usage panel below "Run Claude Analytics" button tracks cumulative input/output tokens and estimated cost
+- Pricing constants: claude-sonnet-4-6 at $3.00/MTok input, $15.00/MTok output
+- Balance field (default $99.84) stored in localStorage with ISO timestamp of last update
+- "Updated [date/time]" shown below balance input so user knows when they last set it
+- Red warning banner appears when remaining balance hits $0, prompting update at console.anthropic.com
+- "Reset usage" button clears token/call counters; balance and timestamp persist independently
+- `medjugorjeAnalytics.ts`: both `analyzeSentiments()` and `enrichTimeWindow()` now return `{ ..., usage: ApiUsage }` with `input_tokens`/`output_tokens` captured from `response.usage`
+
+**Feature: AI output persistence** (`src/pages/MedjugorjePage.tsx`)
+- Live sentiments from "Run Claude Analytics" saved to `localStorage['medjugorje-live-sentiments']`; restored on next page load in place of pre-computed data; "Live analytics active" badge shown
+- AI Window Analysis narratives saved per time-window key (`medjugorje-enrichments`); switching year ranges restores previously generated text automatically
+- Button label changes to "Re-analyze Window" when a saved result exists for the current window
+- Panel subtitle updates to "Saved analysis for…" vs. fresh prompt copy
+
+**Feature: Hover tooltips on AI buttons** (`ButtonTooltip` component)
+- `ButtonTooltip` wrapper uses Tailwind `group-hover` to show styled tooltip below each button
+- "Run Claude Analytics" tip: explains sentiment scoring, keyword extraction, theme clustering, estimated cost
+- "Analyze Window with AI" tip: explains narrative generation, per-window persistence, estimated cost
+
+**Feature: Recipient filter** (Messages section)
+- Three toggle pills — Marija, Mirjana, Group — with live counts from year+theme-filtered set
+- Stacks alongside existing year-range and theme filters; "No messages found" lists all active filters
+- `filteredMessages` split into `baseFilteredMessages` (year+theme) and `filteredMessages` (+ recipient) to keep counts accurate
+
+**Fix: Stats strip "TOP WORDS"** (`src/components/MedjugorjeStats.tsx`)
+- Increased from top-5 to top-10 words displayed in the stats card
+
+**UX: Section reorder + sentiment primer**
+- AI Window Analysis moved above Sentiment Trend (Stats → AI Window → Sentiment → Timeline → Keywords → Themes → Messages)
+- Sentiment primer added below "Sentiment Trend" heading explaining –1/+1 scale and chart interaction
+
+**UX: Keyword chart**
+- Chart restored to 20 bars at 360px height after brief reduction to 10
+
+---
+
 ### Added (2026-06-06) — Session 10b: Medjugorje messages dataset — 2024–2026 expansion, newest-first order
 
 **Data: Full 2024–2026 message set** (`src/data/medjugorjeMessages.ts`)
