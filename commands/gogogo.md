@@ -24,11 +24,20 @@ Would you like me to set it up now? (This is a one-time setup that works across 
 ---
 
 ### 1. Environment Setup
-- Check if your dev server is running (customize the port for your project)
-- If not running, start it in background (e.g., `npm run dev`, `python manage.py runserver`, etc.)
-- Confirm the server starts successfully
 
-> **Note:** Customize the dev server command and port for your specific project stack.
+This project has **two run paths** — pick based on the task:
+
+- **Local development (hot reload):** requires **two** processes —
+  1. `npm run server:dev` — HTTPS backend (auth + AI proxy) on `https://localhost:8443`
+  2. `npm run dev` — Vite UI on `http://localhost:5173` (proxies `/api` to the backend)
+  - ⚠️ The AI features (summary regenerate, Medjugorje analytics) call `/api/*`, so **the backend must be running** — `npm run dev` alone will leave the AI buttons broken (401s).
+- **Secure LAN sharing (others on your network):** `npm run start:lan` or `./start.sh` (the `maryapps` alias) — builds, then serves the app over HTTPS on `0.0.0.0:8443` behind the shared password. This is a single process; do **not** also run Vite for this.
+
+**Before starting:** check for orphaned dev servers from previous sessions and clean them up:
+```bash
+lsof -nP -iTCP -sTCP:LISTEN | grep -E ":51[0-9][0-9]|:8443"   # find strays
+```
+Kill any leftover `vite` processes on 5173–51xx before starting fresh — they serve stale builds and pile up across sessions.
 
 ### 2. Git Status Check
 - Run `git status` to show current branch and any uncommitted changes
@@ -57,8 +66,12 @@ Read and internalize the full project context:
 - Note any issues with status "in_progress" that may need continuation
 
 ### 4. Environment Check
-- Verify environment files exist (e.g., `.env.local`, `.env`)
-- Note if any environment variables appear to be missing based on example files
+- Verify `.env` exists (gitignored). Required server-side vars (see `.env.example`):
+  - `ANTHROPIC_API_KEY` — server-side only, **no** `VITE_` prefix (key must never reach the browser)
+  - `APP_PASSWORD` — the shared LAN sign-in password
+  - `SESSION_SECRET` — long random string for signing session cookies
+  - `PORT` (optional, default 8443)
+- The server fails closed at boot if any of the three required vars are missing.
 
 ### 5. Present Options
 After gathering context, ask the user:
