@@ -1,0 +1,12 @@
+# Cloudflare Pages security headers.
+# Mirrors the Express/Helmet Content-Security-Policy in server/index.ts
+# (the helmet({ contentSecurityPolicy: ... }) block). The static host does
+# NOT run the Express middleware, so these headers reproduce it here.
+# KEEP IN SYNC with server/index.ts whenever the server CSP changes.
+
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com https://server.arcgisonline.com; worker-src blob:; frame-ancestors 'none'; object-src 'none'; base-uri 'self'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  X-Frame-Options: DENY
+  Permissions-Policy: geolocation=(), camera=(), microphone=()

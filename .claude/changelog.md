@@ -46,6 +46,29 @@ This ensures transparency and traceability for all AI-executed workflows.
 
 ## [Unreleased]
 
+### Added (2026-06-07) — Session 17: Cloudflare Pages deploy prep (headers + docs)
+
+**Type:** `task`
+**Status:** `in_progress` (host deploy is the maintainer's click-to-deploy step)
+**Commit Reference:** `chore: add Cloudflare Pages headers + deploy docs for public static site`
+**Date:** 2026-06-07
+**Issue:** `marian-apparitions-3lh`
+
+**What:** Prepared the public static site for Cloudflare Pages hosting.
+- Added `public/_headers` — reproduces the Express/Helmet CSP (server doesn't run on the
+  static host) plus `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`,
+  `Permissions-Policy`. Must be kept in sync with the Helmet config in `server/index.ts`.
+- Added `DEPLOY.md` — Cloudflare Pages deploy guide (Git-connected + Wrangler CLI),
+  security-headers explanation, and a post-deploy verification checklist.
+
+**Verified locally:** `npm run build:public` → `preview:public` → headless browser. World map
+(Carto) and Medjugorje analytics page render; `_headers` lands in `dist/` root; **zero `/api`
+calls**; no auth/AI UI; no Anthropic key in the bundle.
+
+**Remaining (maintainer):** connect the repo in the Cloudflare Pages dashboard (build command
+`npm run build:public`, output dir `dist`) or run `npx wrangler pages deploy dist`, then verify
+the live site against the DEPLOY.md checklist and close `marian-apparitions-3lh`.
+
 ### Added (2026-06-06) — Session 16: Server-side persistence for Medjugorje analytics
 
 **Type:** `feature`
