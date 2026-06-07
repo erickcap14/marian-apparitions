@@ -20,8 +20,9 @@ dist-ssr/
 # Self-signed TLS certs for the LAN server (generated at runtime)
 certs/
 
-# Server-side AI summary store (runtime data, not source)
+# Server-side AI stores (runtime data, not source)
 server/summaries.json
+server/analytics.json
 
 # TypeScript build info
 *.tsbuildinfo

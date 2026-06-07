@@ -26,6 +26,7 @@ import {
   analyzeSentiments,
   enrichTimeWindow,
   computeKeywordFrequency,
+  fetchSavedAnalytics,
 } from '../api/medjugorjeAnalytics'
 import { GeopoliticalTimeline } from '../components/GeopoliticalTimeline'
 import { MedjugorjeStats } from '../components/MedjugorjeStats'
@@ -352,6 +353,30 @@ export function MedjugorjePage() {
   // Compute keyword frequency locally on mount — no API key needed
   useEffect(() => {
     setKeywordFreq(computeKeywordFrequency(medjugorjeMessages).slice(0, 20))
+  }, [])
+
+  // Hydrate from the server-side store (private build only) so analytics generated on any
+  // device/origin are shared and survive rebuilds. Server data wins over local; falls back
+  // silently to the localStorage-seeded state when the store is empty or unreachable.
+  useEffect(() => {
+    if (isPublicBuild) return
+    let cancelled = false
+    fetchSavedAnalytics().then(({ sentiments, enrichments: serverEnrichments }) => {
+      if (cancelled) return
+      if (sentiments && sentiments.length > 0) {
+        setAnalytics(buildAnalyticsFromSentiments(sentiments))
+        setIsPrecomputed(false)
+        saveSentiments(sentiments) // keep localStorage cache in sync
+      }
+      if (serverEnrichments && Object.keys(serverEnrichments).length > 0) {
+        setEnrichments((prev) => {
+          const merged = { ...prev, ...serverEnrichments }
+          saveEnrichments(merged) // keep localStorage cache in sync
+          return merged
+        })
+      }
+    })
+    return () => { cancelled = true }
   }, [])
 
   // Reset visible count when filters change

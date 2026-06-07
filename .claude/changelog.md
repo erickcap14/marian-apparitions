@@ -46,6 +46,37 @@ This ensures transparency and traceability for all AI-executed workflows.
 
 ## [Unreleased]
 
+### Added (2026-06-06) — Session 16: Server-side persistence for Medjugorje analytics
+
+**Type:** `feature`
+**Status:** `closed`
+**Commit Reference:** `feat: persist Medjugorje analytics (sentiments + enrichments) server-side`
+**Date:** 2026-06-06
+**Issue:** `marian-apparitions-gqi`
+
+**Problem:** Medjugorje live sentiment analysis and per-window enrichment narratives were
+saved only in browser localStorage, which is scoped per-origin. Opening the app from a
+different URL/IP/browser showed none of the previously generated analysis (it appeared "lost").
+
+**Fix: disk-backed analytics store** (`server/analytics.ts`, `server/routes.ts`, `.gitignore`)
+- New `server/analytics.ts` mirrors `server/summaries.ts`: reads/writes `server/analytics.json`
+  (gitignored) holding `{ sentiments: SentimentResult[] | null, enrichments: Record<windowLabel,text> }`.
+- `POST /api/sentiments` now calls `saveSentiments(result.sentiments)`; `POST /api/enrich` calls
+  `saveEnrichment(windowLabel, result.text)` — every generation auto-persists.
+- New `GET /api/analytics` returns the full store (behind the existing auth middleware).
+
+**Client hydration** (`src/api/medjugorjeAnalytics.ts`, `src/pages/MedjugorjePage.tsx`)
+- `fetchSavedAnalytics()` GETs `/api/analytics` (returns empty in the public build or on error).
+- MedjugorjePage hydrates on mount (private build only): server sentiments/enrichments win over
+  the localStorage-seeded initial state and are mirrored back into localStorage as a cache.
+- Result: analytics generated on any LAN device are shared across all devices/origins and
+  survive rebuilds. Public build is unaffected (no server, GET returns empty).
+
+**Verified:** private + public builds compile; eslint clean; live server (alt port) boots with
+the new module, authenticates, and `GET /api/analytics` returns `{sentiments,enrichments}`.
+
+---
+
 ### Added (2026-06-06) — Session 16: Public static build mode (no auth/AI) alongside private LAN build
 
 **Type:** `feature`

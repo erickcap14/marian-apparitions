@@ -10,6 +10,7 @@ import { z } from 'zod'
 import { ApparitionSchema } from '../src/data/types.js'
 import { generateSummary, analyzeSentiments, enrichTimeWindow } from './anthropic.js'
 import { getAllSummaries, saveSummary } from './summaries.js'
+import { getAnalytics, saveSentiments, saveEnrichment } from './analytics.js'
 
 const MessageSchema = z.object({
   id: z.string(),
@@ -44,6 +45,10 @@ apiRouter.get('/summaries', (_req, res) => {
   res.json(getAllSummaries())
 })
 
+apiRouter.get('/analytics', (_req, res) => {
+  res.json(getAnalytics())
+})
+
 apiRouter.post('/summary', async (req, res) => {
   const parsed = summaryBody.safeParse(req.body)
   if (!parsed.success) {
@@ -68,6 +73,7 @@ apiRouter.post('/sentiments', async (req, res) => {
   }
   try {
     const result = await analyzeSentiments(parsed.data.messages)
+    saveSentiments(result.sentiments)
     res.json(result)
   } catch (err) {
     console.error('[/api/sentiments] Anthropic call failed:', (err as Error).message)
@@ -87,6 +93,7 @@ apiRouter.post('/enrich', async (req, res) => {
       parsed.data.events,
       parsed.data.windowLabel,
     )
+    saveEnrichment(parsed.data.windowLabel, result.text)
     res.json(result)
   } catch (err) {
     console.error('[/api/enrich] Anthropic call failed:', (err as Error).message)

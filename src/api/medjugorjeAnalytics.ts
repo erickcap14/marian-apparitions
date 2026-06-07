@@ -62,6 +62,27 @@ export async function enrichTimeWindow(
   return (await res.json()) as { text: string; usage: ApiUsage }
 }
 
+export interface SavedAnalytics {
+  sentiments: SentimentResult[] | null
+  enrichments: Record<string, string>
+}
+
+/**
+ * Loads server-persisted Medjugorje analytics (last sentiment run + per-window enrichments).
+ * Shared across every device on the LAN; survives rebuilds and origin changes. Returns empty
+ * data in the public build (no server) or on any error, so callers degrade gracefully.
+ */
+export async function fetchSavedAnalytics(): Promise<SavedAnalytics> {
+  if (isPublicBuild) return { sentiments: null, enrichments: {} }
+  try {
+    const res = await fetch('/api/analytics', { credentials: 'same-origin' })
+    if (!res.ok) return { sentiments: null, enrichments: {} }
+    return (await res.json()) as SavedAnalytics
+  } catch {
+    return { sentiments: null, enrichments: {} }
+  }
+}
+
 export function computeKeywordFrequency(
   messages: MedjugorjeMessage[],
 ): { word: string; count: number }[] {
