@@ -29,6 +29,7 @@ import {
 } from '../api/medjugorjeAnalytics'
 import { GeopoliticalTimeline } from '../components/GeopoliticalTimeline'
 import { MedjugorjeStats } from '../components/MedjugorjeStats'
+import { isPublicBuild } from '../config'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -290,10 +291,11 @@ function buildAnalyticsFromSentiments(sentiments: SentimentResult[]): AnalyticsR
 export function MedjugorjePage() {
   // Use persisted live sentiments if available, otherwise fall back to precomputed
   const [analytics, setAnalytics] = useState<AnalyticsResult>(() => {
-    const persisted = loadPersistedSentiments()
+    // Public build: always use curated precomputed data — ignore any visitor localStorage.
+    const persisted = isPublicBuild ? null : loadPersistedSentiments()
     return buildAnalyticsFromSentiments(persisted ?? precomputedSentiments)
   })
-  const [isPrecomputed, setIsPrecomputed] = useState(() => !loadPersistedSentiments())
+  const [isPrecomputed, setIsPrecomputed] = useState(() => isPublicBuild || !loadPersistedSentiments())
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false)
   const [analyticsError, setAnalyticsError] = useState<string | null>(null)
 
@@ -303,8 +305,11 @@ export function MedjugorjePage() {
   const [yearRange, setYearRange] = useState<[number, number]>([1981, 2026])
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
-  // Enrichments: persisted map of windowLabel → narrative text
-  const [enrichments, setEnrichments] = useState<Record<string, string>>(loadEnrichments)
+  // Enrichments: persisted map of windowLabel → narrative text.
+  // Public build hides the AI Window section entirely, so it starts empty (no localStorage read).
+  const [enrichments, setEnrichments] = useState<Record<string, string>>(
+    isPublicBuild ? {} : loadEnrichments,
+  )
   const [isLoadingEnrichment, setIsLoadingEnrichment] = useState(false)
   const [enrichmentError, setEnrichmentError] = useState<string | null>(null)
 
@@ -313,8 +318,9 @@ export function MedjugorjePage() {
   const [apiUsage, setApiUsage] = useState<UsageRecord>(loadUsage)
   const [budget, setBudget] = useState<number>(() => {
     const val = loadBudget()
-    // Seed localStorage on first load so the value is persisted with a timestamp
-    if (!localStorage.getItem(BUDGET_KEY)) {
+    // Seed localStorage on first load so the value is persisted with a timestamp.
+    // Public build never writes to a visitor's storage (the cost panel is hidden anyway).
+    if (!isPublicBuild && !localStorage.getItem(BUDGET_KEY)) {
       const now = new Date().toISOString()
       localStorage.setItem(BUDGET_KEY, String(val))
       localStorage.setItem(BUDGET_SAVED_AT_KEY, now)
@@ -324,7 +330,7 @@ export function MedjugorjePage() {
   const [budgetSavedAt, setBudgetSavedAt] = useState<string | null>(() => {
     // If no saved-at exists yet, set one now alongside the default balance seed
     const existing = loadBudgetSavedAt()
-    if (!existing) {
+    if (!isPublicBuild && !existing) {
       const now = new Date().toISOString()
       localStorage.setItem(BUDGET_SAVED_AT_KEY, now)
       return now
@@ -662,12 +668,12 @@ export function MedjugorjePage() {
                 Messages · Analytics · Geopolitical Timeline &mdash; 1981–2026
               </p>
             </div>
-            <div>{renderAnalyticsButton()}</div>
+            {!isPublicBuild && <div>{renderAnalyticsButton()}</div>}
           </div>
 
-          {renderUsagePanel()}
+          {!isPublicBuild && renderUsagePanel()}
 
-          {analyticsError && (
+          {!isPublicBuild && analyticsError && (
             <p className="mt-3 font-body text-xs text-red-400">{analyticsError}</p>
           )}
         </section>
@@ -720,8 +726,9 @@ export function MedjugorjePage() {
         <MedjugorjeStats messages={medjugorjeMessages} />
 
         {/* ------------------------------------------------------------------ */}
-        {/* Claude enrichment panel                                             */}
+        {/* Claude enrichment panel (private build only — needs live AI)         */}
         {/* ------------------------------------------------------------------ */}
+        {!isPublicBuild && (
         <section ref={enrichmentRef}>
           <div className="border border-celestial-gold/20 rounded-sm bg-celestial-indigo/30 p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
@@ -786,6 +793,7 @@ export function MedjugorjePage() {
             ) : null}
           </div>
         </section>
+        )}
 
         {/* ------------------------------------------------------------------ */}
         {/* Sentiment trend chart                                               */}

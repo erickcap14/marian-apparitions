@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { Apparition } from '../data/types'
 import { generateSummary, fetchAllSummaries, updateSummaryCache } from '../api/claudeApi'
+import { isPublicBuild } from '../config'
 
 const AI_SUMMARIES_KEY = 'apparition-ai-summaries'
 
@@ -34,6 +35,12 @@ export function DetailPanel({ apparition, onClose }: DetailPanelProps) {
   useEffect(() => {
     if (!apparition) return
     setIsRegenerating(false)
+    // Public build: show only the curated static summary — no network, deterministic for all visitors.
+    if (isPublicBuild) {
+      setDisplayedSummary(apparition.summary)
+      setHasSavedSummary(false)
+      return
+    }
     fetchAllSummaries().then((serverSummaries) => {
       const serverSummary = serverSummaries[apparition.id]
       const localSummary = loadAiSummaries()[apparition.id]
@@ -144,15 +151,17 @@ export function DetailPanel({ apparition, onClose }: DetailPanelProps) {
                 </p>
               )}
 
-              {/* Regenerate button */}
-              <button
-                onClick={handleRegenerate}
-                disabled={isRegenerating}
-                aria-label={isRegenerating ? 'Generating AI summary…' : 'Regenerate summary with AI'}
-                className="w-full mt-3 py-2 text-sm font-body font-medium border border-celestial-gold/40 text-celestial-gold bg-transparent hover:bg-celestial-gold/10 rounded-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-celestial-gold"
-              >
-                {isRegenerating ? 'Generating…' : hasSavedSummary ? '❆ Regenerate with AI' : '❆ Generate with AI'}
-              </button>
+              {/* Regenerate button (private build only) */}
+              {!isPublicBuild && (
+                <button
+                  onClick={handleRegenerate}
+                  disabled={isRegenerating}
+                  aria-label={isRegenerating ? 'Generating AI summary…' : 'Regenerate summary with AI'}
+                  className="w-full mt-3 py-2 text-sm font-body font-medium border border-celestial-gold/40 text-celestial-gold bg-transparent hover:bg-celestial-gold/10 rounded-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-celestial-gold"
+                >
+                  {isRegenerating ? 'Generating…' : hasSavedSummary ? '❆ Regenerate with AI' : '❆ Generate with AI'}
+                </button>
+              )}
             </div>
 
             {/* Divider */}

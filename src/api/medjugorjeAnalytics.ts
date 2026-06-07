@@ -1,4 +1,5 @@
 import type { MedjugorjeMessage, GeopoliticalEvent, SentimentResult } from '../data/medjugorjeTypes'
+import { isPublicBuild } from '../config'
 
 const STOPWORDS = new Set([
   'the', 'a', 'an', 'is', 'am', 'are', 'was', 'were', 'be', 'been', 'being',
@@ -24,6 +25,7 @@ export interface ApiUsage {
 export async function analyzeSentiments(
   messages: MedjugorjeMessage[],
 ): Promise<{ sentiments: SentimentResult[]; usage: ApiUsage }> {
+  if (isPublicBuild) throw new Error('AI analytics is disabled in the public build')
   const res = await fetch('/api/sentiments', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -46,6 +48,7 @@ export async function enrichTimeWindow(
   events: GeopoliticalEvent[],
   windowLabel: string,
 ): Promise<{ text: string; usage: ApiUsage }> {
+  if (isPublicBuild) throw new Error('AI enrichment is disabled in the public build')
   const res = await fetch('/api/enrich', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

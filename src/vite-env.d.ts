@@ -1,8 +1,9 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  // Reserved for future VITE_-prefixed client env vars.
   readonly MODE: string
+  // 'true' in the public static build; absent/anything else for the private LAN build.
+  readonly VITE_PUBLIC_BUILD?: string
 }
 
 interface ImportMeta {

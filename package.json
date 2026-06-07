@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:public": "tsc -b && VITE_PUBLIC_BUILD=true vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "preview:public": "VITE_PUBLIC_BUILD=true vite preview",
     "server": "tsx --env-file=.env server/index.ts",
     "server:dev": "NODE_ENV=development tsx watch --env-file=.env server/index.ts",
     "start:lan": "npm run build && npm run server",

@@ -46,6 +46,36 @@ This ensures transparency and traceability for all AI-executed workflows.
 
 ## [Unreleased]
 
+### Added (2026-06-06) — Session 16: Public static build mode (no auth/AI) alongside private LAN build
+
+**Type:** `feature`
+**Status:** `closed`
+**Commit Reference:** `feat: add public static build mode (no auth/AI) via VITE_PUBLIC_BUILD flag`
+**Date:** 2026-06-06
+**Issue:** `marian-apparitions-l2u`
+
+**Feature: dual-mode build from one codebase** (`src/config.ts`, `src/vite-env.d.ts`, `package.json`)
+- New build-time constant `isPublicBuild = import.meta.env.VITE_PUBLIC_BUILD === 'true'`. Vite inlines it, so dead auth/AI branches are tree-shaken from the public bundle.
+- Added scripts: `build:public` (`VITE_PUBLIC_BUILD=true vite build`) and `preview:public`. `build` stays unchanged for the private LAN app.
+- Private build behavior is fully preserved (auth, AI buttons, server proxy).
+
+**Public build strips all auth + AI + cost UI** (`src/App.tsx`, `src/components/DetailPanel.tsx`, `src/pages/MedjugorjePage.tsx`)
+- `App.tsx`: Sign Out button hidden; `handleLogout` body guarded so the `/api/logout` fetch is dead-code-eliminated.
+- `DetailPanel.tsx`: public shows the curated static `apparition.summary` (no network, no localStorage); "Generate with AI" button hidden.
+- `MedjugorjePage.tsx`: "Run Claude Analytics" button, usage/budget cost panel, and the entire "AI Window Analysis" section hidden; sentiments come from `precomputedSentiments` (ignores visitor localStorage); budget-seeding localStorage writes suppressed.
+
+**Defensive API guards** (`src/api/claudeApi.ts`, `src/api/medjugorjeAnalytics.ts`)
+- `fetchAllSummaries` returns `{}` in public; `generateSummary`/`analyzeSentiments`/`enrichTimeWindow` throw if called. Ensures `fetch('/api/...')` strings never ship in the public bundle.
+
+**Verification**
+- Private and public builds both compile; `eslint` clean.
+- Public bundle grep: **no** `/api/`, `/login`, or `anthropic` strings.
+- Live `preview:public` driven via Playwright: no auth/AI UI, all static content (map, summaries, sentiment chart, keywords, themes, timeline, messages) renders, **zero** `/api/*` network requests.
+
+**Note:** Public artifact is the static `dist/` from `npm run build:public` — hostable free on Cloudflare Pages / Netlify / Vercel / GitHub Pages (build cmd `npm run build:public`, output `dist`). See plan for hosting/cost comparison.
+
+---
+
 ### Fixed (2026-06-06) — Session 15: Satellite/map toggle dot persistence bug
 
 **Type:** `bug`

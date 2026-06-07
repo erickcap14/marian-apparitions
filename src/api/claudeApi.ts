@@ -1,9 +1,11 @@
 import type { Apparition } from '../data/types'
+import { isPublicBuild } from '../config'
 
 // Module-level cache so we only fetch once per page load.
 let summaryCache: Record<string, string> | null = null
 
 export async function fetchAllSummaries(): Promise<Record<string, string>> {
+  if (isPublicBuild) return {}
   if (summaryCache) return summaryCache
   try {
     const res = await fetch('/api/summaries', { credentials: 'same-origin' })
@@ -25,6 +27,7 @@ export function updateSummaryCache(id: string, summary: string): void {
  * The server automatically saves the result so all devices see it on next load.
  */
 export async function generateSummary(apparition: Apparition): Promise<string> {
+  if (isPublicBuild) throw new Error('AI generation is disabled in the public build')
   const res = await fetch('/api/summary', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

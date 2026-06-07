@@ -8,6 +8,7 @@ import { MapLegend } from './components/MapLegend'
 import { TimelineSlider } from './components/TimelineSlider'
 import { SatelliteToggle } from './components/SatelliteToggle'
 import { TodayFeastBanner, getTodayFeastMatches } from './components/TodayFeastBanner'
+import { isPublicBuild } from './config'
 
 const MedjugorjePage = lazy(() =>
   import('./pages/MedjugorjePage').then((m) => ({ default: m.MedjugorjePage }))
@@ -48,6 +49,9 @@ function App() {
   }, [])
 
   const handleLogout = useCallback(async () => {
+    // Stripped from the public bundle: isPublicBuild is inlined to true, so the
+    // unreachable fetch below is dead-code eliminated (no /api string ships).
+    if (isPublicBuild) return
     try {
       await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' })
     } finally {
@@ -117,13 +121,15 @@ function App() {
           >
             Medjugorje
           </button>
-          <button
-            onClick={handleLogout}
-            title="Sign out"
-            className="font-body text-xs tracking-widest uppercase px-3 py-1.5 rounded-sm border border-celestial-gold/40 text-celestial-star-dim hover:border-celestial-gold/70 hover:text-celestial-star transition-colors duration-150"
-          >
-            Sign Out
-          </button>
+          {!isPublicBuild && (
+            <button
+              onClick={handleLogout}
+              title="Sign out"
+              className="font-body text-xs tracking-widest uppercase px-3 py-1.5 rounded-sm border border-celestial-gold/40 text-celestial-star-dim hover:border-celestial-gold/70 hover:text-celestial-star transition-colors duration-150"
+            >
+              Sign Out
+            </button>
+          )}
         </div>
       </header>
 
