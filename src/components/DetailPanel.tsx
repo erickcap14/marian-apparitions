@@ -1,6 +1,24 @@
 import { useState, useEffect } from 'react'
 import type { Apparition } from '../data/types'
-import { generateSummary } from '../api/claudeApi'
+import { generateSummary, fetchAllSummaries, updateSummaryCache } from '../api/claudeApi'
+
+const AI_SUMMARIES_KEY = 'apparition-ai-summaries'
+
+function loadAiSummaries(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(AI_SUMMARIES_KEY)
+    if (raw) return JSON.parse(raw) as Record<string, string>
+  } catch { /* ignore */ }
+  return {}
+}
+
+function saveAiSummary(id: string, summary: string): void {
+  try {
+    const existing = loadAiSummaries()
+    existing[id] = summary
+    localStorage.setItem(AI_SUMMARIES_KEY, JSON.stringify(existing))
+  } catch { /* ignore */ }
+}
 
 interface DetailPanelProps {
   apparition: Apparition | null
@@ -10,13 +28,19 @@ interface DetailPanelProps {
 export function DetailPanel({ apparition, onClose }: DetailPanelProps) {
   const [displayedSummary, setDisplayedSummary] = useState<string>('')
   const [isRegenerating, setIsRegenerating] = useState(false)
+  const [hasSavedSummary, setHasSavedSummary] = useState(false)
   const isOpen = apparition !== null
 
   useEffect(() => {
-    if (apparition) {
-      setDisplayedSummary(apparition.summary)
-      setIsRegenerating(false)
-    }
+    if (!apparition) return
+    setIsRegenerating(false)
+    fetchAllSummaries().then((serverSummaries) => {
+      const serverSummary = serverSummaries[apparition.id]
+      const localSummary = loadAiSummaries()[apparition.id]
+      const best = serverSummary ?? localSummary ?? apparition.summary
+      setDisplayedSummary(best)
+      setHasSavedSummary(!!(serverSummary ?? localSummary))
+    })
   }, [apparition?.id])
 
   async function handleRegenerate() {
@@ -25,6 +49,9 @@ export function DetailPanel({ apparition, onClose }: DetailPanelProps) {
     try {
       const newSummary = await generateSummary(apparition)
       setDisplayedSummary(newSummary)
+      setHasSavedSummary(true)
+      saveAiSummary(apparition.id, newSummary)     // local cache
+      updateSummaryCache(apparition.id, newSummary) // module cache
     } catch (err) {
       console.error('Failed to regenerate summary:', err)
     } finally {
@@ -124,7 +151,7 @@ export function DetailPanel({ apparition, onClose }: DetailPanelProps) {
                 aria-label={isRegenerating ? 'Generating AI summary…' : 'Regenerate summary with AI'}
                 className="w-full mt-3 py-2 text-sm font-body font-medium border border-celestial-gold/40 text-celestial-gold bg-transparent hover:bg-celestial-gold/10 rounded-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-celestial-gold"
               >
-                {isRegenerating ? 'Generating…' : '❆ Regenerate with AI'}
+                {isRegenerating ? 'Generating…' : hasSavedSummary ? '❆ Regenerate with AI' : '❆ Generate with AI'}
               </button>
             </div>
 

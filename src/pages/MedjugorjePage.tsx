@@ -338,6 +338,11 @@ export function MedjugorjePage() {
   const windowLabel = `${yearRange[0]}–${yearRange[1]}`
   const currentEnrichment = enrichments[windowLabel] ?? null
 
+  const latestMessage = useMemo(
+    () => [...medjugorjeMessages].sort((a, b) => b.year - a.year || b.month - a.month)[0],
+    [],
+  )
+
   // Compute keyword frequency locally on mount — no API key needed
   useEffect(() => {
     setKeywordFreq(computeKeywordFrequency(medjugorjeMessages).slice(0, 20))
@@ -666,6 +671,48 @@ export function MedjugorjePage() {
             <p className="mt-3 font-body text-xs text-red-400">{analyticsError}</p>
           )}
         </section>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* Latest message featured card                                        */}
+        {/* ------------------------------------------------------------------ */}
+        {latestMessage && (
+          <section>
+            <p className="font-heading text-xs text-celestial-star-dim uppercase tracking-widest mb-2">
+              Latest Message
+            </p>
+            <div className="border border-celestial-gold/40 rounded-sm bg-celestial-indigo/40 p-5 relative">
+              <div className="flex items-center gap-2 mb-3 flex-wrap">
+                <span className="font-body text-xs text-celestial-star-dim bg-celestial-navy/60 px-2 py-0.5 rounded-sm border border-celestial-gold/20">
+                  {latestMessage.date}
+                </span>
+                <span
+                  className={`font-body text-xs px-2 py-0.5 rounded-sm border capitalize ${
+                    latestMessage.recipient === 'marija'
+                      ? 'bg-celestial-gold/20 text-celestial-gold border-celestial-gold/40'
+                      : latestMessage.recipient === 'mirjana'
+                      ? 'bg-celestial-blue/20 text-celestial-blue border-celestial-blue/40'
+                      : 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+                  }`}
+                >
+                  {latestMessage.recipient}
+                </span>
+              </div>
+              <p className="font-body text-celestial-star text-sm leading-relaxed">
+                {latestMessage.text}
+              </p>
+              {latestMessage.sourceUrl && (
+                <a
+                  href={latestMessage.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-celestial-blue text-xs hover:text-celestial-star transition-colors mt-3 inline-block focus:outline-none focus:ring-2 focus:ring-celestial-gold rounded-sm"
+                >
+                  View Source &rarr;
+                </a>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* ------------------------------------------------------------------ */}
         {/* Stats overview                                                      */}

@@ -9,6 +9,7 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { ApparitionSchema } from '../src/data/types.js'
 import { generateSummary, analyzeSentiments, enrichTimeWindow } from './anthropic.js'
+import { getAllSummaries, saveSummary } from './summaries.js'
 
 const MessageSchema = z.object({
   id: z.string(),
@@ -39,6 +40,10 @@ const enrichBody = z.object({
 
 export const apiRouter = Router()
 
+apiRouter.get('/summaries', (_req, res) => {
+  res.json(getAllSummaries())
+})
+
 apiRouter.post('/summary', async (req, res) => {
   const parsed = summaryBody.safeParse(req.body)
   if (!parsed.success) {
@@ -47,6 +52,7 @@ apiRouter.post('/summary', async (req, res) => {
   }
   try {
     const summary = await generateSummary(parsed.data.apparition)
+    saveSummary(parsed.data.apparition.id, summary)
     res.json({ summary })
   } catch (err) {
     console.error('[/api/summary] Anthropic call failed:', (err as Error).message)
