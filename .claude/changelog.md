@@ -46,6 +46,20 @@ This ensures transparency and traceability for all AI-executed workflows.
 
 ## [Unreleased]
 
+### Fixed (2026-06-06) — Session 15: Satellite/map toggle dot persistence bug
+
+**Type:** `bug`
+**Status:** `closed`
+**Commit Reference:** `fix: pass diff:false to setStyle so style.load fires on satellite toggle`
+**Date:** 2026-06-06
+
+**Bug: Apparition dots disappeared on satellite/map toggle** (`src/map/MapView.tsx`)
+- Root cause: MapLibre GL JS v4's `setStyle` defaults to diff mode (`diff: true`), which calls `style.setState()` internally and **never fires** the `style.load` event
+- The `addLayers` callback was registered on `style.load`, so it silently no-ops on every toggle; dots only reappeared after a full map remount (navigating to Medjugorje page and back)
+- Fix: pass `{ diff: false }` to `setStyle`, forcing a full style replacement that always fires `style.load` → `addLayers` re-adds source and pin layers correctly
+
+---
+
 ### Added (2026-06-06) — Session 14: Helmet CSP + login page fix
 
 **Type:** `security`

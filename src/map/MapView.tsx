@@ -222,7 +222,7 @@ export function MapView({ onSelect, flyToId, century, country, maxYear, isSatell
     if (prevIsSatelliteRef.current === isSatellite) return
     prevIsSatelliteRef.current = isSatellite
     if (!mapRef.current) return
-    mapRef.current.setStyle(isSatellite ? SATELLITE_STYLE : GRAPHIC_STYLE)
+    mapRef.current.setStyle(isSatellite ? SATELLITE_STYLE : GRAPHIC_STYLE, { diff: false })
   }, [isSatellite])
 
   // ── Filter: update GeoJSON source data ────────────────────────────────────
