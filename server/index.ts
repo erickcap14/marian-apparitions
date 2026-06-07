@@ -104,6 +104,9 @@ app.use(
 app.get('/login', (_req, res) => {
   res.sendFile(resolve(here, 'login.html'))
 })
+app.get('/login.js', (_req, res) => {
+  res.sendFile(resolve(here, 'login.js'))
+})
 app.post('/api/login', loginRateLimiter, handleLogin)
 app.post('/api/logout', handleLogout)
 
