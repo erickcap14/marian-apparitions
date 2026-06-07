@@ -50,10 +50,38 @@ if (!existsSync(distDir)) {
 const app = express()
 app.set('trust proxy', 1)
 
-// Security headers. CSP is disabled here on purpose: the app loads MapLibre tiles from
-// Esri (server.arcgisonline.com) and fonts from Google, and a strict default CSP would
-// silently break the map. Tightening CSP is a tracked follow-up.
-app.use(helmet({ contentSecurityPolicy: false }))
+// Security headers with an explicit Content-Security-Policy allow-list.
+//
+// External origins required by the app:
+//   fonts.googleapis.com / fonts.gstatic.com  — Google Fonts (Cinzel + Inter)
+//   basemaps.cartocdn.com                     — Carto dark-matter style JSON
+//   *.basemaps.cartocdn.com                   — Carto vector tiles, sprites, glyphs
+//   server.arcgisonline.com                   — Esri World Imagery satellite tiles
+//   blob:  (worker-src)                       — MapLibre GL 4.x creates workers from blob URLs
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc:     ["'self'"],
+        scriptSrc:      ["'self'"],
+        // 'unsafe-inline' required: MapLibre injects inline styles on canvas/popup elements
+        styleSrc:       ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc:        ["'self'", 'https://fonts.gstatic.com'],
+        imgSrc:         ["'self'", 'data:', 'blob:'],
+        connectSrc: [
+          "'self'",
+          'https://basemaps.cartocdn.com',
+          'https://*.basemaps.cartocdn.com',
+          'https://server.arcgisonline.com',
+        ],
+        workerSrc:      ['blob:'],
+        frameAncestors: ["'none'"],
+        objectSrc:      ["'none'"],
+        baseUri:        ["'self'"],
+      },
+    },
+  }),
+)
 app.use(express.json({ limit: '1mb' }))
 
 app.use(
