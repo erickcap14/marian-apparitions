@@ -46,6 +46,29 @@ This ensures transparency and traceability for all AI-executed workflows.
 
 ## [Unreleased]
 
+### Added (2026-06-06) — Session 14: Helmet CSP + login page fix
+
+**Type:** `security`
+**Status:** `closed`
+**Commit Reference:** `feat: enable helmet CSP with explicit origin allow-list` / `fix: move login inline script to external file to satisfy CSP script-src`
+**Date:** 2026-06-06
+
+**Security: Content Security Policy enabled** (`server/index.ts`)
+- Replaced `contentSecurityPolicy: false` with an explicit allow-list covering all real external origins the app uses
+- `script-src 'self'` — all JS is bundled locally; MapLibre 4.x doesn't need `'unsafe-eval'`
+- `style-src 'self' 'unsafe-inline' fonts.googleapis.com` — `unsafe-inline` required for MapLibre's runtime canvas/popup styles
+- `font-src 'self' fonts.gstatic.com` — Cinzel + Inter font files
+- `connect-src 'self' basemaps.cartocdn.com *.basemaps.cartocdn.com server.arcgisonline.com` — Carto base map + Esri satellite tiles
+- `worker-src blob:` — MapLibre GL 4.x creates Web Workers from blob URLs
+- `frame-ancestors 'none'`, `object-src 'none'`, `base-uri 'self'`
+- Closes: `marian-apparitions-275`
+
+**Fix: Login page broken by CSP** (`server/login.html`, `server/login.js`, `server/index.ts`)
+- The login page's inline `<script>` block was blocked by the new `script-src 'self'` policy
+- Extracted the form handler to `server/login.js`; added a public `GET /login.js` route (before `requireAuth`); replaced inline `<script>` with `<script src="/login.js">`
+
+---
+
 ### Added (2026-06-06) — Session 13: Server-side AI summary persistence + latest message feature
 
 **Type:** `feature`
